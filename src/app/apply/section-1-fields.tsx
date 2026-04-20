@@ -12,7 +12,23 @@ const GENDER_OPTIONS = [
 ]
 
 export function Section1Fields() {
-  const { register, formState: { errors } } = useFormContext<ApplicationFormValues>()
+  const { register, setValue, formState: { errors } } = useFormContext<ApplicationFormValues>()
+
+  const handleBirthdayChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value
+    if (val) {
+      const birthDate = new Date(val)
+      const today = new Date()
+      let age = today.getFullYear() - birthDate.getFullYear()
+      const m = today.getMonth() - birthDate.getMonth()
+      if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+        age--
+      }
+      setValue('age', age, { shouldValidate: true })
+    }
+  }
+
+  const birthdayRegister = register('birthday')
 
   return (
     <div className="flex flex-col gap-6">
@@ -69,9 +85,11 @@ export function Section1Fields() {
             id="field-age"
             type="number"
             min={18}
-            max={99}
-            placeholder="e.g. 32"
-            className="form-input"
+            max={120}
+            placeholder="Auto-calculated"
+            className="form-input bg-neutral-50 opacity-70 cursor-not-allowed"
+            readOnly
+            tabIndex={-1}
             {...register('age', { valueAsNumber: true })}
           />
         </FieldWrapper>
@@ -82,7 +100,11 @@ export function Section1Fields() {
           id="field-birthday"
           type="date"
           className="form-input"
-          {...register('birthday')}
+          {...birthdayRegister}
+          onChange={(e) => {
+            birthdayRegister.onChange(e)
+            handleBirthdayChange(e)
+          }}
         />
       </FieldWrapper>
 
