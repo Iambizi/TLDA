@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { ApplicationFormClient } from './application-form-client'
+import { ApplicationFormClient } from '@/app/apply/application-form-client'
 
 export const metadata: Metadata = {
   title: 'Apply',

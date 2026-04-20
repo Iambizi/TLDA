@@ -3,8 +3,8 @@
 import { useFormContext, Controller } from 'react-hook-form'
 import type { ApplicationFormValues } from '@/lib/schemas'
 import { LIFESTYLE_ATTRIBUTES, LIFESTYLE_PREFERENCE_LABELS, READINESS_LABELS } from '@/lib/constants'
-import { FieldWrapper } from './field-wrapper'
-import { PriorityWeightsSlider } from './priority-weights-slider'
+import { FieldWrapper } from '@/app/apply/field-wrapper'
+import { PriorityWeightsSlider } from '@/app/apply/priority-weights-slider'
 import type { LifestylePreference, ReadinessForLove } from '@/types'
 
 const LIFESTYLE_OPTIONS: LifestylePreference[] = ['want', 'dont_want', 'flexible']

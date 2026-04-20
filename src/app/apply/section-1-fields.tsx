@@ -2,7 +2,7 @@
 
 import { useFormContext } from 'react-hook-form'
 import type { ApplicationFormValues } from '@/lib/schemas'
-import { FieldWrapper } from './field-wrapper'
+import { FieldWrapper } from '@/app/apply/field-wrapper'
 
 const GENDER_OPTIONS = [
   { value: 'man', label: 'Man' },

@@ -2,7 +2,7 @@
 
 import { useFormContext } from 'react-hook-form'
 import type { ApplicationFormValues } from '@/lib/schemas'
-import { FieldWrapper } from './field-wrapper'
+import { FieldWrapper } from '@/app/apply/field-wrapper'
 
 // NOTE: values_or_worldview is a sensitive field.
 // It is presented to the participant as "Values & Worldview" — a neutral, open-ended prompt.
