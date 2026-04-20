@@ -3,7 +3,8 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { ReviewForm } from './review-form'
-import { LIFESTYLE_ATTRIBUTES, LIFESTYLE_PREFERENCE_LABELS, READINESS_LABELS } from '@/lib/constants'
+import { InterviewLogger } from './interview-logger'
+import { LIFESTYLE_ATTRIBUTES, LIFESTYLE_PREFERENCE_LABELS, READINESS_LABELS, INTERVIEW_OUTCOME_LABELS } from '@/lib/constants'
 
 export const metadata: Metadata = { title: 'Participant Detail' }
 
@@ -62,6 +63,12 @@ export default async function ParticipantPage({ params }: ParticipantPageProps) 
     `)
     .eq('id', id)
     .single()
+
+  const { data: interviews } = await supabase
+    .from('interviews')
+    .select('*')
+    .eq('participant_id', id)
+    .order('created_at', { ascending: false })
 
   if (!participant) {
     notFound()
@@ -187,9 +194,9 @@ export default async function ParticipantPage({ params }: ParticipantPageProps) 
 
         </div>
 
-        {/* Right Column: Review Actions Sidebar */}
-        <div className="w-full lg:w-80 shrink-0">
-          <div className="sticky top-8 rounded-2xl border p-6 shadow-sm bg-white" style={{ borderColor: 'var(--border)' }}>
+        {/* Right Column: Sidebar */}
+        <div className="w-full lg:w-80 shrink-0 flex flex-col gap-6">
+          <div className="rounded-2xl border p-6 shadow-sm bg-white" style={{ borderColor: 'var(--border)' }}>
             <h3 className="text-lg font-semibold mb-4" style={{ color: 'var(--neutral-900)' }}>
               Review Actions
             </h3>
@@ -199,7 +206,35 @@ export default async function ParticipantPage({ params }: ParticipantPageProps) 
               initialStatus={application.status}
               initialNotes={application.organizer_notes}
             />
+          </div>
+
+          <div className="rounded-2xl border p-6 shadow-sm bg-white" style={{ borderColor: 'var(--border)' }}>
+            <h3 className="text-lg font-semibold mb-4" style={{ color: 'var(--neutral-900)' }}>
+              Interviews
+            </h3>
             
+            {(interviews || []).map((iv: any) => (
+              <div key={iv.id} className="mb-4 pb-4 border-b last:border-0 last:mb-0 last:pb-0" style={{ borderColor: 'var(--border)' }}>
+                <p className="text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: 'var(--accent)' }}>
+                  {INTERVIEW_OUTCOME_LABELS[iv.outcome as keyof typeof INTERVIEW_OUTCOME_LABELS] || iv.outcome}
+                </p>
+                {iv.scheduled_at && (
+                  <p className="text-sm mb-1" style={{ color: 'var(--neutral-600)' }}>
+                    {new Date(iv.scheduled_at).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' })}
+                  </p>
+                )}
+                {iv.notes && (
+                  <p className="text-sm mt-2 p-3 bg-neutral-50 rounded-lg whitespace-pre-wrap" style={{ color: 'var(--neutral-800)' }}>
+                    {iv.notes}
+                  </p>
+                )}
+              </div>
+            ))}
+
+            <div className="mt-4 pt-4 border-t" style={{ borderColor: 'var(--border)' }}>
+              <p className="text-xs font-medium uppercase tracking-wider mb-4" style={{ color: 'var(--muted)' }}>Log New Interview</p>
+              <InterviewLogger participantId={participant.id} applicationId={application.id} />
+            </div>
           </div>
         </div>
 
