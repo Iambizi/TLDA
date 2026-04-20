@@ -1,0 +1,11 @@
+{
+  "steps": {
+    "step-1-init": "not_started",
+    "step-2-schema": "not_started",
+    "step-3-auth": "not_started",
+    "step-4-public-form": "not_started",
+    "step-5-dashboard": "not_started",
+    "step-6-events": "not_started",
+    "step-7-post-event": "not_started"
+  }
+}
