@@ -138,3 +138,26 @@ export async function removeParticipantFromEvent(
   return { success: true }
 }
 
+export async function updateAttendanceStatus(
+  eventId: string,
+  participantId: string,
+  status: string
+) {
+  const supabase = await createClient() as any
+
+  const { error } = await supabase
+    .from('event_participants')
+    .update({ attendance_status: status })
+    .eq('event_id', eventId)
+    .eq('participant_id', participantId)
+
+  if (error) {
+    console.error('Error updating attendance status:', error)
+    return { error: 'Failed to update attendance status.' }
+  }
+
+  revalidatePath(`/events/${eventId}`)
+  return { success: true }
+}
+
+

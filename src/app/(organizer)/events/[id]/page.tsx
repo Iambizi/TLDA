@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/server'
 import { EVENT_STATUS_LABELS } from '@/lib/constants'
 import { ParticipantAssigner } from './assigner'
 import { RemoveParticipantButton } from './remove-button'
+import { AttendanceDropdown } from './attendance-dropdown'
 
 export const metadata: Metadata = { title: 'Event Details' }
 
@@ -86,13 +87,22 @@ export default async function EventPage({ params }: EventPageProps) {
 
   return (
     <div className="max-w-5xl">
-      <div className="mb-6 flex items-center gap-4">
+      <div className="mb-6 flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <Link
+            href="/events"
+            className="text-sm font-medium hover:underline"
+            style={{ color: 'var(--neutral-500)' }}
+          >
+            ← Back to events
+          </Link>
+        </div>
         <Link
-          href="/events"
-          className="text-sm font-medium hover:underline"
-          style={{ color: 'var(--neutral-500)' }}
+          href={`/events/${id}/matches`}
+          className="rounded-xl px-4 py-2 text-sm font-medium transition-all shadow-sm"
+          style={{ background: 'var(--neutral-900)', color: 'white' }}
         >
-          ← Back to events
+          View Matches
         </Link>
       </div>
 
@@ -154,6 +164,7 @@ export default async function EventPage({ params }: EventPageProps) {
                   <thead className="bg-neutral-50/50 border-b uppercase text-xs" style={{ borderColor: 'var(--border)', color: 'var(--muted)' }}>
                     <tr>
                       <th className="px-6 py-4 font-medium">Participant</th>
+                      <th className="px-6 py-4 font-medium">Attendance</th>
                       <th className="px-6 py-4 font-medium">Demographics</th>
                       <th className="px-6 py-4 font-medium">Contact</th>
                       <th className="px-6 py-4 font-medium text-right">Actions</th>
@@ -170,6 +181,9 @@ export default async function EventPage({ params }: EventPageProps) {
                           >
                             {p.full_name}
                           </Link>
+                        </td>
+                        <td className="px-6 py-4">
+                          <AttendanceDropdown eventId={event.id} participantId={p.participant_id} initialStatus={p.attendance_status} />
                         </td>
                         <td className="px-6 py-4" style={{ color: 'var(--neutral-600)' }}>
                           {[p.age, p.gender].filter(Boolean).join(' • ')}
