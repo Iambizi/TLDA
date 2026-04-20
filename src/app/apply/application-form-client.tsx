@@ -7,9 +7,9 @@ import { useActionState } from 'react'
 import { ApplicationFormSchema } from '@/lib/schemas'
 import { DEFAULT_PRIORITY_WEIGHTS, LIFESTYLE_ATTRIBUTES } from '@/lib/constants'
 import { submitApplication } from '@/app/actions/application'
-import { Section1Fields } from './section-1-fields'
-import { Section2Fields } from './section-2-fields'
-import { Section3Fields } from './section-3-fields'
+import { Section1Fields } from '@/app/apply/section-1-fields'
+import { Section2Fields } from '@/app/apply/section-2-fields'
+import { Section3Fields } from '@/app/apply/section-3-fields'
 
 const SECTIONS = [
   { number: 1, label: 'Basic Info' },
