@@ -68,17 +68,20 @@ export function ApplicationFormClient() {
     setStep((s) => s - 1)
   }
 
-  function onSubmit(data: FieldValues) {
-    const fd = new FormData()
-    for (const [key, value] of Object.entries(data)) {
-      if (key === 'priority_weights') {
-        fd.append(key, JSON.stringify(value))
-      } else if (value !== undefined && value !== null) {
-        fd.append(key, String(value))
-      }
-    }
-    startTransition(() => {
-      submitAction(fd)
+  const onSubmitHandler = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    startTransition(async () => {
+      await handleSubmit((data: FieldValues) => {
+        const fd = new FormData()
+        for (const [key, value] of Object.entries(data)) {
+          if (key === 'priority_weights') {
+            fd.append(key, JSON.stringify(value))
+          } else if (value !== undefined && value !== null) {
+            fd.append(key, String(value))
+          }
+        }
+        submitAction(fd)
+      })(e)
     })
   }
 
@@ -120,7 +123,7 @@ export function ApplicationFormClient() {
         className="rounded-2xl border p-8 shadow-sm"
         style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}
       >
-        <form onSubmit={handleSubmit(onSubmit)} id="application-form">
+        <form onSubmit={onSubmitHandler} id="application-form">
           {step === 1 && <Section1Fields />}
           {step === 2 && <Section2Fields />}
           {step === 3 && <Section3Fields />}
