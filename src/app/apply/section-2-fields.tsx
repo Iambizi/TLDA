@@ -133,7 +133,9 @@ export function Section2Fields() {
               <div className="grid grid-cols-2 gap-4">
                 {/* Self */}
                 <div>
-                  <p className="text-xs mb-2 font-medium" style={{ color: 'var(--muted)' }}>About you</p>
+                  <p className="text-xs mb-2 font-medium" style={{ color: errors[attr.self] ? '#b91c1c' : 'var(--muted)' }}>
+                    About you {errors[attr.self] && <span className="font-normal">— Required</span>}
+                  </p>
                   <div className="flex gap-2 flex-wrap">
                     {(('isBinary' in attr && attr.isBinary) ? LIFESTYLE_OPTIONS.filter((o) => o !== 'flexible') : LIFESTYLE_OPTIONS).map((opt) => (
                       <label key={opt} className="flex items-center gap-1.5 cursor-pointer">
@@ -153,7 +155,9 @@ export function Section2Fields() {
 
                 {/* Partner */}
                 <div>
-                  <p className="text-xs mb-2 font-medium" style={{ color: 'var(--muted)' }}>In a partner</p>
+                  <p className="text-xs mb-2 font-medium" style={{ color: errors[attr.partner] ? '#b91c1c' : 'var(--muted)' }}>
+                    In a partner {errors[attr.partner] && <span className="font-normal">— Required</span>}
+                  </p>
                   <div className="flex gap-2 flex-wrap">
                     {LIFESTYLE_OPTIONS.map((opt) => (
                       <label key={opt} className="flex items-center gap-1.5 cursor-pointer">
