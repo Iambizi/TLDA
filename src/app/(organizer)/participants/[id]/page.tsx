@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { ReviewForm } from './review-form'
 import { InterviewLogger } from './interview-logger'
+import { DeleteParticipantCard } from './delete-participant-card'
 import { LIFESTYLE_ATTRIBUTES, LIFESTYLE_PREFERENCE_LABELS, READINESS_LABELS, INTERVIEW_OUTCOME_LABELS } from '@/lib/constants'
 
 export const metadata: Metadata = { title: 'Participant Detail' }
@@ -236,6 +237,11 @@ export default async function ParticipantPage({ params }: ParticipantPageProps) 
               <InterviewLogger participantId={participant.id} applicationId={application.id} />
             </div>
           </div>
+
+          <DeleteParticipantCard
+            participantId={participant.id}
+            participantName={participant.full_name}
+          />
         </div>
 
       </div>

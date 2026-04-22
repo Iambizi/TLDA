@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, type FormEvent } from 'react'
 import { useForm, FormProvider, type FieldValues } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useActionState, startTransition } from 'react'
@@ -68,21 +68,22 @@ export function ApplicationFormClient() {
     setStep((s) => s - 1)
   }
 
-  const onSubmitHandler = (e: React.FormEvent<HTMLFormElement>) => {
+  const onSubmitHandler = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    startTransition(async () => {
-      await handleSubmit((data: FieldValues) => {
-        const fd = new FormData()
-        for (const [key, value] of Object.entries(data)) {
-          if (key === 'priority_weights') {
-            fd.append(key, JSON.stringify(value))
-          } else if (value !== undefined && value !== null) {
-            fd.append(key, String(value))
-          }
+    void handleSubmit((data: FieldValues) => {
+      const fd = new FormData()
+      for (const [key, value] of Object.entries(data)) {
+        if (key === 'priority_weights') {
+          fd.append(key, JSON.stringify(value))
+        } else if (value !== undefined && value !== null) {
+          fd.append(key, String(value))
         }
+      }
+
+      startTransition(() => {
         submitAction(fd)
-      })(e)
-    })
+      })
+    })(e)
   }
 
   return (
@@ -157,6 +158,7 @@ export function ApplicationFormClient() {
 
             {step < 3 ? (
               <button
+                key="next-button"
                 type="button"
                 onClick={goNext}
                 className="px-6 py-2.5 rounded-xl text-sm font-medium text-white transition-all cursor-pointer"
@@ -167,6 +169,7 @@ export function ApplicationFormClient() {
               </button>
             ) : (
               <button
+                key="submit-button"
                 type="submit"
                 disabled={pending}
                 className="px-6 py-2.5 rounded-xl text-sm font-medium text-white transition-all disabled:opacity-60 cursor-pointer disabled:cursor-not-allowed"
