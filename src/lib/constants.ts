@@ -86,15 +86,15 @@ export const SELF_LIFESTYLE_LABELS: Record<LifestylePreference, string> = {
 }
 
 export const LIFESTYLE_ATTRIBUTES = [
-  { self: 'has_kids', partner: 'partner_has_kids', label: 'Has Kids' },
+  { self: 'has_kids', partner: 'partner_has_kids', label: 'Has Kids', isBinary: true },
   { self: 'travels_world', partner: 'partner_travels_world', label: 'Travels the World' },
-  { self: 'is_divorced', partner: 'partner_is_divorced', label: 'Divorced' },
+  { self: 'is_divorced', partner: 'partner_is_divorced', label: 'Divorced', isBinary: true },
   {
     self: 'smokes_drug_friendly',
     partner: 'partner_smokes_drug_friendly',
     label: 'Smoke / Drug Friendly',
   },
-  { self: 'has_tattoos', partner: 'partner_has_tattoos', label: 'Has Tattoos' },
+  { self: 'has_tattoos', partner: 'partner_has_tattoos', label: 'Has Tattoos', isBinary: true },
   { self: 'fitness_level', partner: 'partner_fitness', label: 'Fitness Focused' },
   { self: 'close_with_family', partner: 'partner_close_with_family', label: 'Close with Family' },
 ] as const

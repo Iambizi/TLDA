@@ -135,7 +135,7 @@ export function Section2Fields() {
                 <div>
                   <p className="text-xs mb-2 font-medium" style={{ color: 'var(--muted)' }}>About you</p>
                   <div className="flex gap-2 flex-wrap">
-                    {LIFESTYLE_OPTIONS.map((opt) => (
+                    {(('isBinary' in attr && attr.isBinary) ? LIFESTYLE_OPTIONS.filter((o) => o !== 'flexible') : LIFESTYLE_OPTIONS).map((opt) => (
                       <label key={opt} className="flex items-center gap-1.5 cursor-pointer">
                         <input
                           type="radio"
