@@ -101,7 +101,7 @@ export function Section1Fields() {
           min={18}
           max={120}
           placeholder="Auto-calculated"
-          className="form-input bg-neutral-50 opacity-70 cursor-not-allowed"
+          className="form-input bg-neutral-50 opacity-70 cursor-not-allowed w-32"
           readOnly
           tabIndex={-1}
           {...register('age', { valueAsNumber: true })}
