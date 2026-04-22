@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useForm, FormProvider, type FieldValues } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useActionState } from 'react'
+import { useActionState, startTransition } from 'react'
 import { ApplicationFormSchema } from '@/lib/schemas'
 import { DEFAULT_PRIORITY_WEIGHTS, LIFESTYLE_ATTRIBUTES } from '@/lib/constants'
 import { submitApplication } from '@/app/actions/application'
@@ -77,7 +77,9 @@ export function ApplicationFormClient() {
         fd.append(key, String(value))
       }
     }
-    submitAction(fd)
+    startTransition(() => {
+      submitAction(fd)
+    })
   }
 
   return (
