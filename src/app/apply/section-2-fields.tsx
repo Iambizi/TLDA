@@ -2,7 +2,7 @@
 
 import { useFormContext, Controller } from 'react-hook-form'
 import type { ApplicationFormValues } from '@/lib/schemas'
-import { LIFESTYLE_ATTRIBUTES, LIFESTYLE_PREFERENCE_LABELS, READINESS_LABELS } from '@/lib/constants'
+import { LIFESTYLE_ATTRIBUTES, LIFESTYLE_PREFERENCE_LABELS, SELF_LIFESTYLE_LABELS, READINESS_LABELS } from '@/lib/constants'
 import { FieldWrapper } from '@/app/apply/field-wrapper'
 import { PriorityWeightsSlider } from '@/app/apply/priority-weights-slider'
 import type { LifestylePreference, ReadinessForLove } from '@/types'
@@ -144,7 +144,7 @@ export function Section2Fields() {
                           {...register(attr.self as keyof ApplicationFormValues)}
                         />
                         <span className="text-xs" style={{ color: 'var(--neutral-700)' }}>
-                          {LIFESTYLE_PREFERENCE_LABELS[opt]}
+                          {SELF_LIFESTYLE_LABELS[opt]}
                         </span>
                       </label>
                     ))}

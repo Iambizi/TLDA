@@ -79,6 +79,12 @@ export const LIFESTYLE_PREFERENCE_LABELS: Record<LifestylePreference, string> = 
   flexible: 'Flexible',
 }
 
+export const SELF_LIFESTYLE_LABELS: Record<LifestylePreference, string> = {
+  want: 'Yes',
+  dont_want: 'No',
+  flexible: 'Sometimes',
+}
+
 export const LIFESTYLE_ATTRIBUTES = [
   { self: 'has_kids', partner: 'partner_has_kids', label: 'Has Kids' },
   { self: 'travels_world', partner: 'partner_travels_world', label: 'Travels the World' },

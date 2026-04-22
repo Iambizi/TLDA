@@ -80,31 +80,31 @@ export function Section1Fields() {
           </select>
         </FieldWrapper>
 
-        <FieldWrapper label="Age" error={errors.age?.message} required>
+        <FieldWrapper label="Birthday" error={errors.birthday?.message} required>
           <input
-            id="field-age"
-            type="number"
-            min={18}
-            max={120}
-            placeholder="Auto-calculated"
-            className="form-input bg-neutral-50 opacity-70 cursor-not-allowed"
-            readOnly
-            tabIndex={-1}
-            {...register('age', { valueAsNumber: true })}
+            id="field-birthday"
+            type="date"
+            className="form-input"
+            {...birthdayRegister}
+            onChange={(e) => {
+              birthdayRegister.onChange(e)
+              handleBirthdayChange(e)
+            }}
           />
         </FieldWrapper>
       </div>
 
-      <FieldWrapper label="Birthday" error={errors.birthday?.message} required>
+      <FieldWrapper label="Age" error={errors.age?.message} required>
         <input
-          id="field-birthday"
-          type="date"
-          className="form-input"
-          {...birthdayRegister}
-          onChange={(e) => {
-            birthdayRegister.onChange(e)
-            handleBirthdayChange(e)
-          }}
+          id="field-age"
+          type="number"
+          min={18}
+          max={120}
+          placeholder="Auto-calculated"
+          className="form-input bg-neutral-50 opacity-70 cursor-not-allowed"
+          readOnly
+          tabIndex={-1}
+          {...register('age', { valueAsNumber: true })}
         />
       </FieldWrapper>
 
