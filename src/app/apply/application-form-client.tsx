@@ -140,7 +140,7 @@ export function ApplicationFormClient() {
               <button
                 type="button"
                 onClick={goBack}
-                className="px-5 py-2.5 rounded-xl text-sm font-medium border transition-all"
+                className="px-5 py-2.5 rounded-xl text-sm font-medium border transition-all cursor-pointer"
                 style={{ borderColor: 'var(--border)', color: 'var(--neutral-600)' }}
                 id="form-back"
               >
@@ -154,7 +154,7 @@ export function ApplicationFormClient() {
               <button
                 type="button"
                 onClick={goNext}
-                className="px-6 py-2.5 rounded-xl text-sm font-medium text-white transition-all"
+                className="px-6 py-2.5 rounded-xl text-sm font-medium text-white transition-all cursor-pointer"
                 style={{ background: 'var(--accent)' }}
                 id="form-next"
               >
@@ -164,7 +164,7 @@ export function ApplicationFormClient() {
               <button
                 type="submit"
                 disabled={pending}
-                className="px-6 py-2.5 rounded-xl text-sm font-medium text-white transition-all disabled:opacity-60"
+                className="px-6 py-2.5 rounded-xl text-sm font-medium text-white transition-all disabled:opacity-60 cursor-pointer disabled:cursor-not-allowed"
                 style={{ background: pending ? 'var(--neutral-400)' : 'var(--accent)' }}
                 id="form-submit"
               >
