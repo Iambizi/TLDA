@@ -1,5 +1,5 @@
 -- ============================================================
--- LTDA — Singles Event Platform
+-- Group Date — Singles Event Platform
 -- Supabase SQL Migration: Initial Schema
 -- Run this in the Supabase SQL Editor or via CLI
 -- ============================================================

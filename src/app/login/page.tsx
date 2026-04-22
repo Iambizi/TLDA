@@ -19,7 +19,7 @@ export default function LoginPage() {
             Organizer Login
           </h1>
           <p className="mt-1 text-sm" style={{ color: 'var(--muted)' }}>
-            LTDA — Singles Event Platform
+            Group Date — Singles Event Platform
           </p>
         </div>
 

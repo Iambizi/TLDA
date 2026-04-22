@@ -9,8 +9,8 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: {
-    default: 'LTDA — Singles Event Platform',
-    template: '%s | LTDA',
+    default: 'Group Date — Singles Event Platform',
+    template: '%s | Group Date',
   },
   description:
     'Organizer-first internal platform for managing singles event applications, rosters, and match coordination.',

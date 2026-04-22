@@ -7,7 +7,7 @@ export default function HomePage() {
         <div className="mb-8">
           <span className="text-5xl">✦</span>
         </div>
-        <h1 className="text-4xl font-semibold mb-3 tracking-tight">LTDA</h1>
+        <h1 className="text-4xl font-semibold mb-3 tracking-tight">Group Date</h1>
         <p className="text-neutral-500 mb-10 text-lg">
           Singles Event Platform
         </p>

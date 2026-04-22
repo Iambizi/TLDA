@@ -1,6 +1,7 @@
 'use server'
 
 import { redirect } from 'next/navigation'
+import { randomUUID } from 'crypto'
 import { createClient } from '@/lib/supabase/server'
 import { ApplicationFormSchema } from '@/lib/schemas'
 
@@ -49,10 +50,14 @@ export async function submitApplication(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const supabase = await createClient() as any
 
+  // Generate UUID ahead of time to avoid needing SELECT permissions (RLS) on the participants table
+  const participantId = randomUUID()
+
   // Insert participant (using `as any` to bypass Supabase generic inference issue with SSR client)
-  const { data: participant, error: participantError } = await supabase
+  const { error: participantError } = await supabase
     .from('participants')
     .insert({
+      id: participantId,
       full_name: data.full_name,
       contact_info: data.contact_info,
       gender: data.gender,
@@ -93,10 +98,8 @@ export async function submitApplication(
       close_with_family: data.close_with_family,
       partner_close_with_family: data.partner_close_with_family,
     })
-    .select('id')
-    .single()
 
-  if (participantError || !participant) {
+  if (participantError) {
     console.error('Participant insert error:', participantError)
     return { error: 'Something went wrong saving your application. Please try again.' }
   }
@@ -105,7 +108,7 @@ export async function submitApplication(
   const { error: applicationError } = await supabase
     .from('applications')
     .insert({
-      participant_id: participant.id,
+      participant_id: participantId,
       status: 'applied',
       interview_required: false,
       interview_completed: false,

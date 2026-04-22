@@ -27,7 +27,7 @@ export function OrganizerNav({ userEmail }: OrganizerNavProps) {
         <div className="flex items-center gap-2.5">
           <span className="text-lg" style={{ color: 'var(--brand-500)' }}>✦</span>
           <span className="font-semibold text-sm tracking-wide" style={{ color: 'var(--neutral-900)' }}>
-            LTDA
+            Group Date
           </span>
         </div>
       </div>
