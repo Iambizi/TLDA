@@ -83,9 +83,9 @@ export function ApplicationFormClient() {
   return (
     <FormProvider {...methods}>
       {/* Step indicator */}
-      <div className="flex items-center gap-2 mb-8">
+      <div className="flex items-center justify-center mb-8 max-w-2xl mx-auto w-full">
         {SECTIONS.map((s, i) => (
-          <div key={s.number} className="flex items-center gap-2 flex-1">
+          <div key={s.number} className={`flex items-center gap-4 ${i < SECTIONS.length - 1 ? 'flex-1' : ''}`}>
             <div className="flex items-center gap-2 shrink-0">
               <div
                 className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold transition-all"
