@@ -17,8 +17,8 @@ interface RecentApplicationRow {
   participants: {
     id: string
     full_name: string
-    age: number | null
-    gender: string | null
+    age: number | null | undefined
+    gender: string | null | undefined
   } | null
 }
 
@@ -78,8 +78,8 @@ export default async function DashboardPage() {
     status: app.status,
     submitted_at: app.submitted_at,
     full_name: app.participants?.full_name ?? 'Unknown',
-    age: app.participants?.age,
-    gender: app.participants?.gender,
+    age: app.participants?.age ?? null,
+    gender: app.participants?.gender ?? null,
   }))
 
   return (
