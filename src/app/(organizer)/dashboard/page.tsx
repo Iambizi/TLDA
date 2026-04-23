@@ -8,8 +8,32 @@ export const metadata: Metadata = {
   title: 'Dashboard',
 }
 
+type ApplicationStatus = Database['public']['Enums']['application_status']
+
+interface RecentApplicationRow {
+  id: string
+  status: ApplicationStatus
+  submitted_at: string
+  participants: {
+    id: string
+    full_name: string
+    age: number | null
+    gender: string | null
+  } | null
+}
+
+interface FormattedRecentApplication {
+  id: string
+  participant_id: string | undefined
+  status: ApplicationStatus
+  submitted_at: string
+  full_name: string
+  age: number | null
+  gender: string | null
+}
+
 export default async function DashboardPage() {
-  const supabase = await createClient() as any
+  const supabase = await createClient()
 
   // 1. Fetch metrics in parallel
   const weekAgo = new Date()
@@ -30,7 +54,7 @@ export default async function DashboardPage() {
 
   // 2. Fetch recent applications with participant info
   // Using explicit select and cast to avoid inference issues with complex joins
-  const { data: recentApplications } = await supabase
+  const { data: recentApplicationsData } = await supabase
     .from('applications')
     .select(`
       id,
@@ -46,10 +70,12 @@ export default async function DashboardPage() {
     .order('submitted_at', { ascending: false })
     .limit(5)
 
-  const formattedRecent = (recentApplications || []).map((app: any) => ({
+  const recentApplications = (recentApplicationsData ?? []) as RecentApplicationRow[]
+
+  const formattedRecent: FormattedRecentApplication[] = recentApplications.map((app) => ({
     id: app.id,
     participant_id: app.participants?.id,
-    status: app.status as keyof typeof APPLICATION_STATUS_LABELS,
+    status: app.status,
     submitted_at: app.submitted_at,
     full_name: app.participants?.full_name ?? 'Unknown',
     age: app.participants?.age,
@@ -123,13 +149,17 @@ export default async function DashboardPage() {
                     <th className="px-6 py-4 font-medium text-right">Applied</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y" style={{ borderColor: 'var(--border)' }}>
-                  {formattedRecent.map((app: any) => {
-                    const statusColorClass = APPLICATION_STATUS_COLORS[app.status as keyof typeof APPLICATION_STATUS_COLORS] || 'bg-gray-100 text-gray-500'
+                <tbody>
+                  {formattedRecent.map((app, index) => {
+                    const statusColorClass = APPLICATION_STATUS_COLORS[app.status] || 'bg-gray-100 text-gray-500'
                     const date = new Date(app.submitted_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
                     
                     return (
-                      <tr key={app.id} className="hover:bg-neutral-50/50 transition-colors">
+                      <tr
+                        key={app.id}
+                        className="hover:bg-neutral-50/50 transition-colors"
+                        style={index === 0 ? undefined : { boxShadow: 'inset 0 1px 0 rgba(148, 163, 184, 0.14)' }}
+                      >
                         <td className="px-6 py-4">
                           <Link 
                             href={`/participants/${app.participant_id}`}
@@ -146,7 +176,7 @@ export default async function DashboardPage() {
                           <span
                             className={`inline-flex items-center px-2 py-1 rounded-md text-xs font-medium ${statusColorClass}`}
                           >
-                            {APPLICATION_STATUS_LABELS[app.status as keyof typeof APPLICATION_STATUS_LABELS] || app.status}
+                            {APPLICATION_STATUS_LABELS[app.status] || app.status}
                           </span>
                         </td>
                         <td className="px-6 py-4 text-right" style={{ color: 'var(--muted)' }}>
