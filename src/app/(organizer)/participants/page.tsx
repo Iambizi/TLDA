@@ -107,6 +107,13 @@ export default async function ParticipantsPage({
             {formattedApplications.length === 1 ? "" : "s"} found.
           </p>
         </div>
+        <Link
+          href="/participants/import"
+          className="rounded-xl px-4 py-2 text-sm font-medium text-white transition-all hover:opacity-90 shadow-sm"
+          style={{ background: 'var(--accent)' }}
+        >
+          Import CSV
+        </Link>
       </div>
 
       {/* Filters */}
