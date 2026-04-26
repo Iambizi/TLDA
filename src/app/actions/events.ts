@@ -70,6 +70,61 @@ export async function createEvent(
 
 export type AssignState = { error: string } | { success: true } | undefined
 
+async function syncApplicationAssignmentState(params: {
+  supabase: any
+  applicationId: string | null
+  participantId: string
+  eventId: string
+  mode: 'assign' | 'remove'
+}) {
+  const { supabase, applicationId, participantId, eventId, mode } = params
+
+  const targetApplicationId = applicationId
+    ? applicationId
+    : (
+        await supabase
+          .from('applications')
+          .select('id, status, assigned_event_id')
+          .eq('participant_id', participantId)
+          .order('submitted_at', { ascending: false })
+          .limit(1)
+          .maybeSingle()
+      ).data?.id ?? null
+
+  if (!targetApplicationId) return
+
+  if (mode === 'assign') {
+    await supabase
+      .from('applications')
+      .update({
+        status: 'assigned_to_event',
+        assigned_event_id: eventId,
+      })
+      .eq('id', targetApplicationId)
+
+    return
+  }
+
+  const { data: application } = await supabase
+    .from('applications')
+    .select('status, assigned_event_id')
+    .eq('id', targetApplicationId)
+    .maybeSingle()
+
+  if (!application || application.assigned_event_id !== eventId) return
+
+  const nextStatus =
+    application.status === 'assigned_to_event' ? 'approved' : application.status
+
+  await supabase
+    .from('applications')
+    .update({
+      status: nextStatus,
+      assigned_event_id: null,
+    })
+    .eq('id', targetApplicationId)
+}
+
 export async function assignParticipantToEvent(
   eventId: string,
   _prevState: AssignState,
@@ -110,15 +165,18 @@ export async function assignParticipantToEvent(
   }
 
   // 3. Update global application status to 'assigned_to_event'
-  if (applicationId) {
-    await supabase
-      .from('applications')
-      .update({ status: 'assigned_to_event' })
-      .eq('id', applicationId)
-  }
+  await syncApplicationAssignmentState({
+    supabase,
+    applicationId,
+    participantId,
+    eventId,
+    mode: 'assign',
+  })
 
   revalidatePath(`/events/${eventId}`)
   revalidatePath(`/participants`)
+  revalidatePath(`/participants/${participantId}`)
+  revalidatePath('/dashboard')
   return { success: true }
 }
 
@@ -127,6 +185,18 @@ export async function removeParticipantFromEvent(
   participantId: string
 ) {
   const supabase = await createClient() as any
+
+  const { data: rosterRow, error: rosterLookupError } = await supabase
+    .from('event_participants')
+    .select('application_id')
+    .eq('event_id', eventId)
+    .eq('participant_id', participantId)
+    .maybeSingle()
+
+  if (rosterLookupError) {
+    console.error('Error looking up participant roster entry:', rosterLookupError)
+    return { error: 'Failed to load roster assignment.' }
+  }
 
   const { error } = await supabase
     .from('event_participants')
@@ -139,7 +209,18 @@ export async function removeParticipantFromEvent(
     return { error: 'Failed to remove participant.' }
   }
 
+  await syncApplicationAssignmentState({
+    supabase,
+    applicationId: rosterRow?.application_id ?? null,
+    participantId,
+    eventId,
+    mode: 'remove',
+  })
+
   revalidatePath(`/events/${eventId}`)
+  revalidatePath(`/participants`)
+  revalidatePath(`/participants/${participantId}`)
+  revalidatePath('/dashboard')
   return { success: true }
 }
 
@@ -164,4 +245,3 @@ export async function updateAttendanceStatus(
   revalidatePath(`/events/${eventId}`)
   return { success: true }
 }
-
