@@ -6,7 +6,10 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useActionState, startTransition } from 'react'
 import { ApplicationFormSchema } from '@/lib/schemas'
 import { DEFAULT_PRIORITY_WEIGHTS, LIFESTYLE_ATTRIBUTES } from '@/lib/constants'
-import { submitApplication } from '@/app/actions/application'
+import {
+  submitApplication,
+  type ApplicationSubmissionState,
+} from '@/app/actions/application'
 import { Section1Fields } from '@/app/apply/section-1-fields'
 import { Section2Fields } from '@/app/apply/section-2-fields'
 import { Section3Fields } from '@/app/apply/section-3-fields'
@@ -24,9 +27,26 @@ const SECTION_2_KEYS = [
   ...LIFESTYLE_ATTRIBUTES.flatMap((a) => [a.self, a.partner]),
 ]
 
-export function ApplicationFormClient() {
+type ApplicationFormAction = (
+  prevState: ApplicationSubmissionState,
+  formData: FormData
+) => Promise<ApplicationSubmissionState>
+
+interface ApplicationFormClientProps {
+  submissionAction?: ApplicationFormAction
+  submitLabel?: string
+  pendingLabel?: string
+  footerNote?: string
+}
+
+export function ApplicationFormClient({
+  submissionAction = submitApplication,
+  submitLabel = 'Submit Application',
+  pendingLabel = 'Submitting…',
+  footerNote = 'Your information is private and will only be seen by the organizer.',
+}: ApplicationFormClientProps) {
   const [step, setStep] = useState(1)
-  const [submitState, submitAction, pending] = useActionState(submitApplication, undefined)
+  const [submitState, submitAction, pending] = useActionState(submissionAction, undefined)
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const methods = useForm<any>({
@@ -176,7 +196,7 @@ export function ApplicationFormClient() {
                 style={{ background: pending ? 'var(--neutral-400)' : 'var(--accent)' }}
                 id="form-submit"
               >
-                {pending ? 'Submitting…' : 'Submit Application'}
+                {pending ? pendingLabel : submitLabel}
               </button>
             )}
           </div>
@@ -184,7 +204,7 @@ export function ApplicationFormClient() {
       </div>
 
       <p className="text-center text-xs mt-4" style={{ color: 'var(--muted)' }}>
-        Your information is private and will only be seen by the organizer.
+        {footerNote}
       </p>
     </FormProvider>
   )

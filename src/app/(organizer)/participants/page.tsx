@@ -107,13 +107,26 @@ export default async function ParticipantsPage({
             {formattedApplications.length === 1 ? "" : "s"} found.
           </p>
         </div>
-        <Link
-          href="/participants/import"
-          className="rounded-xl px-4 py-2 text-sm font-medium text-white transition-all hover:opacity-90 shadow-sm"
-          style={{ background: 'var(--accent)' }}
-        >
-          Import CSV
-        </Link>
+        <div className="flex items-center gap-3">
+          <Link
+            href="/participants/new"
+            className="rounded-xl px-4 py-2 text-sm font-medium text-white transition-all hover:opacity-90 shadow-sm"
+            style={{ background: "var(--accent)" }}
+          >
+            + Add Participant
+          </Link>
+          <Link
+            href="/participants/import"
+            className="rounded-xl px-4 py-2 text-sm font-medium transition-all hover:bg-neutral-100 shadow-sm border"
+            style={{
+              background: "var(--surface)",
+              color: "var(--neutral-700)",
+              borderColor: "var(--border)",
+            }}
+          >
+            Import CSV
+          </Link>
+        </div>
       </div>
 
       {/* Filters */}
@@ -165,6 +178,26 @@ export default async function ParticipantsPage({
             <p className="text-sm" style={{ color: "var(--muted)" }}>
               No participants found matching the current filters.
             </p>
+            <div className="mt-5 flex items-center justify-center gap-3">
+              <Link
+                href="/participants/new"
+                className="rounded-xl px-4 py-2 text-sm font-medium text-white transition-all hover:opacity-90 shadow-sm"
+                style={{ background: "var(--accent)" }}
+              >
+                Add Participant Manually
+              </Link>
+              <Link
+                href="/participants/import"
+                className="rounded-xl px-4 py-2 text-sm font-medium transition-all hover:bg-neutral-100 shadow-sm border"
+                style={{
+                  background: "var(--surface)",
+                  color: "var(--neutral-700)",
+                  borderColor: "var(--border)",
+                }}
+              >
+                Import CSV
+              </Link>
+            </div>
           </div>
         ) : (
           <div className="overflow-x-auto">

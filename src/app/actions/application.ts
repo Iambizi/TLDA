@@ -2,20 +2,18 @@
 
 import { redirect } from 'next/navigation'
 import { randomUUID } from 'crypto'
+import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
-import { ApplicationFormSchema } from '@/lib/schemas'
+import { ApplicationFormSchema, type ApplicationFormValues } from '@/lib/schemas'
 
-export type SubmitApplicationState =
+export type ApplicationSubmissionState =
   | { error: string }
   | { success: true }
   | undefined
 
-export async function submitApplication(
-  _prevState: SubmitApplicationState,
-  formData: FormData
-): Promise<SubmitApplicationState> {
-  // Parse priority_weights from JSON string
+function parseApplicationFormData(formData: FormData) {
   const rawData: Record<string, unknown> = {}
+
   for (const [key, value] of formData.entries()) {
     if (key === 'priority_weights') {
       try {
@@ -39,21 +37,20 @@ export async function submitApplication(
   if (rawData.preferred_partner_age_min) rawData.preferred_partner_age_min = Number(rawData.preferred_partner_age_min)
   if (rawData.preferred_partner_age_max) rawData.preferred_partner_age_max = Number(rawData.preferred_partner_age_max)
 
-  const parsed = ApplicationFormSchema.safeParse(rawData)
+  return ApplicationFormSchema.safeParse(rawData)
+}
 
-  if (!parsed.success) {
-    const firstError = parsed.error.issues[0]
-    return { error: firstError?.message ?? 'Please check your answers and try again.' }
-  }
-
-  const data = parsed.data
+async function createParticipantAndApplication(
+  data: ApplicationFormValues,
+  options?: { strictApplicationInsert?: boolean }
+): Promise<
+  | { error: string }
+  | { participantId: string; applicationError: unknown | null }
+> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const supabase = await createClient() as any
-
-  // Generate UUID ahead of time to avoid needing SELECT permissions (RLS) on the participants table
   const participantId = randomUUID()
 
-  // Insert participant (using `as any` to bypass Supabase generic inference issue with SSR client)
   const { error: participantError } = await supabase
     .from('participants')
     .insert({
@@ -101,10 +98,9 @@ export async function submitApplication(
 
   if (participantError) {
     console.error('Participant insert error:', participantError)
-    return { error: 'Something went wrong saving your application. Please try again.' }
+    return { error: 'Something went wrong saving the participant. Please try again.' }
   }
 
-  // Insert application record
   const { error: applicationError } = await supabase
     .from('applications')
     .insert({
@@ -119,10 +115,69 @@ export async function submitApplication(
       assigned_event_id: null,
     })
 
-  if (applicationError) {
-    console.error('Application insert error:', applicationError)
-    // Participant saved — don't block the user on this
+  if (applicationError && options?.strictApplicationInsert) {
+    console.error('Application insert error after participant insert:', applicationError)
+
+    const { error: cleanupError } = await supabase
+      .from('participants')
+      .delete()
+      .eq('id', participantId)
+
+    if (cleanupError) {
+      console.error('Participant rollback error:', cleanupError)
+    }
+
+    return { error: 'The participant could not be added completely. Please try again.' }
+  }
+
+  return { participantId, applicationError }
+}
+
+export async function submitApplication(
+  _prevState: ApplicationSubmissionState,
+  formData: FormData
+): Promise<ApplicationSubmissionState> {
+  const parsed = parseApplicationFormData(formData)
+
+  if (!parsed.success) {
+    const firstError = parsed.error.issues[0]
+    return { error: firstError?.message ?? 'Please check your answers and try again.' }
+  }
+
+  const result = await createParticipantAndApplication(parsed.data)
+
+  if ('error' in result) {
+    return { error: result.error }
+  }
+
+  if (result.applicationError) {
+    console.error('Application insert error:', result.applicationError)
   }
 
   redirect('/apply/success')
+}
+
+export async function createOrganizerParticipant(
+  _prevState: ApplicationSubmissionState,
+  formData: FormData
+): Promise<ApplicationSubmissionState> {
+  const parsed = parseApplicationFormData(formData)
+
+  if (!parsed.success) {
+    const firstError = parsed.error.issues[0]
+    return { error: firstError?.message ?? 'Please check the participant details and try again.' }
+  }
+
+  const result = await createParticipantAndApplication(parsed.data, {
+    strictApplicationInsert: true,
+  })
+
+  if ('error' in result) {
+    return { error: result.error }
+  }
+
+  revalidatePath('/dashboard')
+  revalidatePath('/participants')
+
+  redirect(`/participants/${result.participantId}`)
 }

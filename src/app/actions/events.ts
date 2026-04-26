@@ -14,13 +14,18 @@ export async function createEvent(
   _prevState: CreateEventState,
   formData: FormData
 ): Promise<CreateEventState> {
+  const optionalString = (key: string) => {
+    const value = formData.get(key)
+    return typeof value === 'string' && value.trim() !== '' ? value : undefined
+  }
+
   const rawData = {
     title: formData.get('title'),
-    event_date: formData.get('event_date') || null,
-    location: formData.get('location') || null,
-    description: formData.get('description') || null,
+    event_date: optionalString('event_date'),
+    location: optionalString('location'),
+    description: optionalString('description'),
     status: formData.get('status') || 'draft',
-    notes: formData.get('notes') || null,
+    notes: optionalString('notes'),
   }
 
   const parsed = CreateEventSchema.safeParse(rawData)
@@ -159,5 +164,4 @@ export async function updateAttendanceStatus(
   revalidatePath(`/events/${eventId}`)
   return { success: true }
 }
-
 
