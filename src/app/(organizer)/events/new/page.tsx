@@ -1,12 +1,46 @@
 'use client'
 
-import { useActionState } from 'react'
+import { useState } from 'react'
 import Link from 'next/link'
-import { createEvent } from '@/app/actions/events'
+import { useRouter } from 'next/navigation'
+import { useMutation } from 'convex/react'
+import { api } from '../../../../../convex/_generated/api'
 import { EVENT_STATUS_LABELS } from '@/lib/constants'
 
 export default function CreateEventPage() {
-  const [state, action, pending] = useActionState(createEvent, undefined)
+  const createEvent = useMutation(api.events.createEvent)
+  const router = useRouter()
+  const [error, setError] = useState<string | null>(null)
+  const [pending, setPending] = useState(false)
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    setPending(true)
+    setError(null)
+
+    const formData = new FormData(event.currentTarget)
+    const title = formData.get('title') as string
+    const event_date = formData.get('event_date') as string
+    const status = formData.get('status') as string
+    const location = formData.get('location') as string
+    const description = formData.get('description') as string
+    const notes = formData.get('notes') as string
+
+    try {
+      const newEventId = await createEvent({
+        title,
+        event_date: event_date ? new Date(event_date).getTime() : undefined,
+        status: status as any,
+        location: location || undefined,
+        description: description || undefined,
+        notes: notes || undefined,
+      })
+      router.push(`/events/${newEventId}`)
+    } catch (err: any) {
+      setError(err.message)
+      setPending(false)
+    }
+  }
 
   return (
     <div className="max-w-2xl mx-auto">
@@ -30,10 +64,10 @@ export default function CreateEventPage() {
           </p>
         </div>
 
-        <form action={action} className="flex flex-col gap-6">
-          {state && 'error' in state && (
+        <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+          {error && (
             <div className="rounded-lg px-4 py-3 text-sm" style={{ background: '#fef2f2', color: '#b91c1c', border: '1px solid #fecaca' }}>
-              {state.error}
+              {error}
             </div>
           )}
 
@@ -131,7 +165,7 @@ export default function CreateEventPage() {
             <button
               type="submit"
               disabled={pending}
-              className="rounded-xl px-6 py-2.5 text-sm font-medium text-white transition-all disabled:opacity-60"
+              className="rounded-xl px-6 py-2.5 text-sm font-medium text-white transition-all disabled:opacity-60 cursor-pointer"
               style={{ background: pending ? 'var(--neutral-400)' : 'var(--accent)' }}
             >
               {pending ? 'Creating...' : 'Create Event'}

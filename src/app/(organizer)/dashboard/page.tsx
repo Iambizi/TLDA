@@ -1,78 +1,22 @@
-import type { Metadata } from 'next'
+'use client'
+
 import Link from 'next/link'
-import { createClient } from '@/lib/supabase/server'
+import { useQuery } from 'convex/react'
+import { api } from '../../../../convex/_generated/api'
 import { APPLICATION_STATUS_LABELS, APPLICATION_STATUS_COLORS } from '@/lib/constants'
-import type { Database } from '@/types/database'
 
-export const metadata: Metadata = {
-  title: 'Dashboard',
-}
+export default function DashboardPage() {
+  const summary = useQuery(api.dashboard.summary)
 
-type ApplicationStatus = Database['public']['Enums']['application_status']
+  if (summary === undefined) {
+    return (
+      <div className="p-8 text-sm" style={{ color: 'var(--muted)' }}>
+        Loading dashboard...
+      </div>
+    )
+  }
 
-interface RecentApplicationRow {
-  id: string
-  status: ApplicationStatus
-  submitted_at: string
-  participants: {
-    id: string
-    full_name: string
-    age: number | null | undefined
-    gender: string | null | undefined
-  } | null
-}
-
-interface FormattedRecentApplication {
-  id: string
-  participant_id: string | undefined
-  status: ApplicationStatus
-  submitted_at: string
-  full_name: string
-  age: number | null
-  gender: string | null
-}
-
-export default async function DashboardPage() {
-  const supabase = await createClient()
-
-  // 1. Fetch metrics in parallel
-  const [
-    { count: totalMatches },
-    { count: contactsExchanged },
-  ] = await Promise.all([
-    supabase.from('match_outcomes').select('*', { count: 'exact', head: true }),
-    supabase.from('match_outcomes').select('*', { count: 'exact', head: true }).eq('interest_status', 'introduced_off_platform'),
-  ])
-
-  // 2. Fetch recent applications with participant info
-  // Using explicit select and cast to avoid inference issues with complex joins
-  const { data: recentApplicationsData } = await supabase
-    .from('applications')
-    .select(`
-      id,
-      status,
-      submitted_at,
-      participants:participant_id (
-        id,
-        full_name,
-        age,
-        gender
-      )
-    `)
-    .order('submitted_at', { ascending: false })
-    .limit(5)
-
-  const recentApplications = (recentApplicationsData ?? []) as RecentApplicationRow[]
-
-  const formattedRecent: FormattedRecentApplication[] = recentApplications.map((app) => ({
-    id: app.id,
-    participant_id: app.participants?.id,
-    status: app.status,
-    submitted_at: app.submitted_at,
-    full_name: app.participants?.full_name ?? 'Unknown',
-    age: app.participants?.age ?? null,
-    gender: app.participants?.gender ?? null,
-  }))
+  const { recentSubmissions } = summary
 
   return (
     <div>
@@ -90,9 +34,9 @@ export default async function DashboardPage() {
       {/* Metrics */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3 mb-10">
         {[
-          { label: 'Total Matches Made', value: totalMatches ?? 0 },
-          { label: 'Contacts Exchanged', value: contactsExchanged ?? 0 },
-          { label: 'Revenue vs. Cost', value: '$0 net', note: 'Connects after operations schema migration' },
+          { label: 'Total Applications', value: summary.totalApplications },
+          { label: 'Pending Review', value: summary.pendingReview },
+          { label: 'New This Week', value: summary.newThisWeek },
         ].map((stat) => (
           <div
             key={stat.label}
@@ -105,9 +49,6 @@ export default async function DashboardPage() {
             <p className="mt-2 text-3xl font-semibold" style={{ color: 'var(--neutral-900)' }}>
               {stat.value}
             </p>
-            {'note' in stat && (
-              <p className="mt-2 text-xs" style={{ color: 'var(--muted)' }}>{stat.note}</p>
-            )}
           </div>
         ))}
       </div>
@@ -128,7 +69,7 @@ export default async function DashboardPage() {
         </div>
 
         <div className="rounded-2xl border overflow-hidden" style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
-          {formattedRecent.length === 0 ? (
+          {recentSubmissions.length === 0 ? (
             <div className="p-8 text-center" style={{ color: 'var(--muted)' }}>
               <p className="text-sm">No applications yet.</p>
             </div>
@@ -144,13 +85,13 @@ export default async function DashboardPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {formattedRecent.map((app, index) => {
-                    const statusColorClass = APPLICATION_STATUS_COLORS[app.status] || 'bg-gray-100 text-gray-500'
+                  {recentSubmissions.map((app, index) => {
+                    const statusColorClass = APPLICATION_STATUS_COLORS[app.status as keyof typeof APPLICATION_STATUS_COLORS] || 'bg-gray-100 text-gray-500'
                     const date = new Date(app.submitted_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
                     
                     return (
                       <tr
-                        key={app.id}
+                        key={app._id}
                         className="hover:bg-neutral-50/50 transition-colors"
                         style={index === 0 ? undefined : { boxShadow: 'inset 0 1px 0 rgba(148, 163, 184, 0.14)' }}
                       >
@@ -160,17 +101,17 @@ export default async function DashboardPage() {
                             className="font-medium hover:underline"
                             style={{ color: 'var(--neutral-900)' }}
                           >
-                            {app.full_name}
+                            {app.participant?.full_name ?? 'Unknown'}
                           </Link>
                         </td>
                         <td className="px-6 py-4" style={{ color: 'var(--neutral-600)' }}>
-                          {[app.age, app.gender].filter(Boolean).join(' • ')}
+                          {[app.participant?.age, app.participant?.gender].filter(Boolean).join(' • ')}
                         </td>
                         <td className="px-6 py-4">
                           <span
                             className={`inline-flex items-center px-2 py-1 rounded-md text-xs font-medium ${statusColorClass}`}
                           >
-                            {APPLICATION_STATUS_LABELS[app.status] || app.status}
+                            {APPLICATION_STATUS_LABELS[app.status as keyof typeof APPLICATION_STATUS_LABELS] || app.status}
                           </span>
                         </td>
                         <td className="px-6 py-4 text-right" style={{ color: 'var(--muted)' }}>

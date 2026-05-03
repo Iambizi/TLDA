@@ -1,86 +1,30 @@
-import type { Metadata } from 'next'
-import { notFound } from 'next/navigation'
+'use client'
+
+import { notFound, useParams } from 'next/navigation'
 import Link from 'next/link'
-import { createClient } from '@/lib/supabase/server'
+import { useQuery } from 'convex/react'
+import { api } from '../../../../../convex/_generated/api'
+import type { Id } from '../../../../../convex/_generated/dataModel'
 import { EVENT_STATUS_LABELS } from '@/lib/constants'
 import { ParticipantAssigner } from './assigner'
 import { RemoveParticipantButton } from './remove-button'
 import { AttendanceDropdown } from './attendance-dropdown'
 
-export const metadata: Metadata = { title: 'Event Details' }
+export default function EventPage() {
+  const params = useParams<{ id: Id<'events'> }>()
+  const id = params?.id
 
-interface EventPageProps {
-  params: Promise<{ id: string }>
-}
+  const data = useQuery(api.events.getById, id ? { id } : 'skip')
 
-export default async function EventPage({ params }: EventPageProps) {
-  const { id } = await params
-  const supabase = await createClient() as any
+  if (data === undefined) {
+    return <div className="p-8 text-sm" style={{ color: 'var(--muted)' }}>Loading event...</div>
+  }
 
-  // 1. Fetch event details
-  const { data: event } = await supabase
-    .from('events')
-    .select('*')
-    .eq('id', id)
-    .single()
-
-  if (!event) {
+  if (data === null) {
     notFound()
   }
 
-  // 2. Fetch the roster (event_participants joined with participants)
-  const { data: rosterRaw } = await supabase
-    .from('event_participants')
-    .select(`
-      id,
-      attendance_status,
-      participant_id,
-      participants (
-        id,
-        full_name,
-        age,
-        gender,
-        contact_info
-      )
-    `)
-    .eq('event_id', id)
-
-  const roster = (rosterRaw || []).map((rp: any) => ({
-    id: rp.id,
-    participant_id: rp.participant_id,
-    attendance_status: rp.attendance_status,
-    full_name: rp.participants?.full_name ?? 'Unknown',
-    age: rp.participants?.age,
-    gender: rp.participants?.gender,
-    contact_info: rp.participants?.contact_info,
-  }))
-
-  const rosterParticipantIds = roster.map((r: any) => r.participant_id)
-
-  // 3. Fetch assignable applicants not already on this event roster.
-  // v3 allows multi-event assignment, so participants assigned elsewhere remain available here.
-  const { data: approvedApps } = await supabase
-    .from('applications')
-    .select(`
-      id,
-      participant_id,
-      participants (
-        id,
-        full_name,
-        age,
-        gender
-      )
-    `)
-    .in('status', ['approved', 'assigned_to_event'])
-
-  const availableParticipants = (approvedApps || [])
-    .filter((app: any) => app.participant_id && !rosterParticipantIds.includes(app.participant_id))
-    .map((app: any) => ({
-      id: app.participants.id,
-      full_name: app.participants.full_name,
-      age: app.participants.age,
-      gender: app.participants.gender,
-    }))
+  const { roster, availableParticipants, ...event } = data
 
   const dateStr = event.event_date 
     ? new Date(event.event_date).toLocaleString('en-US', { dateStyle: 'full', timeStyle: 'short' }) 
@@ -207,28 +151,28 @@ export default async function EventPage({ params }: EventPageProps) {
                     </tr>
                   </thead>
                   <tbody className="divide-y" style={{ borderColor: 'var(--border)' }}>
-                    {roster.map((p: any) => (
-                      <tr key={p.id} className="hover:bg-neutral-50/50 transition-colors">
+                    {roster.map((p) => (
+                      <tr key={p._id} className="hover:bg-neutral-50/50 transition-colors">
                         <td className="px-6 py-4">
                           <Link 
                             href={`/participants/${p.participant_id}`}
                             className="font-medium hover:underline"
                             style={{ color: 'var(--neutral-900)' }}
                           >
-                            {p.full_name}
+                            {p.participant?.full_name ?? 'Unknown'}
                           </Link>
                         </td>
                         <td className="px-6 py-4">
-                          <AttendanceDropdown eventId={event.id} participantId={p.participant_id} initialStatus={p.attendance_status} />
+                          <AttendanceDropdown eventId={event._id} participantId={p.participant_id} initialStatus={p.attendance_status} />
                         </td>
                         <td className="px-6 py-4" style={{ color: 'var(--neutral-600)' }}>
-                          {[p.age, p.gender].filter(Boolean).join(' • ')}
+                          {[p.participant?.age, p.participant?.gender].filter(Boolean).join(' • ')}
                         </td>
                         <td className="px-6 py-4" style={{ color: 'var(--neutral-600)' }}>
-                          {p.contact_info}
+                          {p.participant?.contact_info}
                         </td>
                         <td className="px-6 py-4 text-right">
-                          <RemoveParticipantButton eventId={event.id} participantId={p.participant_id} />
+                          <RemoveParticipantButton eventId={event._id} participantId={p.participant_id} />
                         </td>
                       </tr>
                     ))}
@@ -242,7 +186,7 @@ export default async function EventPage({ params }: EventPageProps) {
         {/* Right Column: Assigner */}
         <div className="w-full lg:w-80 shrink-0">
           <div className="sticky top-8">
-            <ParticipantAssigner eventId={event.id} availableParticipants={availableParticipants} />
+            <ParticipantAssigner eventId={event._id} availableParticipants={availableParticipants.map(p => ({ ...p, id: p._id }))} />
           </div>
         </div>
       </div>

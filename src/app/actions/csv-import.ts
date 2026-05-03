@@ -1,9 +1,9 @@
 'use server'
 
-import { randomUUID } from 'crypto'
 import { revalidatePath } from 'next/cache'
 import { ApplicationFormSchema, type ApplicationFormValues } from '@/lib/schemas'
-import { createClient } from '@/lib/supabase/server'
+import { fetchMutation, fetchQuery } from 'convex/nextjs'
+import { api } from '../../../convex/_generated/api'
 import {
   buildErrorReport,
   buildRawApplicationFromRow,
@@ -58,85 +58,17 @@ export async function importCsvApplicants(
       (row): row is PreparedImportRow & { parsedData: ApplicationFormValues } =>
         row.status === 'valid' && row.parsedData !== null
     )
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const supabase = await createClient() as any
 
     let insertedCount = 0
 
     for (const row of validRows) {
-      const participantId = randomUUID()
-
-      const { error: participantError } = await supabase
-        .from('participants')
-        .insert({
-          id: participantId,
-          full_name: row.parsedData.full_name,
-          contact_info: row.parsedData.contact_info,
-          gender: row.parsedData.gender,
-          age: row.parsedData.age,
-          birthday: row.parsedData.birthday || null,
-          work: row.parsedData.work || null,
-          dream_city: row.parsedData.dream_city || null,
-          ask_out_preference: row.parsedData.ask_out_preference || null,
-          comfortable_with_man_asking_woman: row.parsedData.comfortable_with_man_asking_woman,
-          comfortable_with_alcohol_meetcute: row.parsedData.comfortable_with_alcohol_meetcute,
-          life_in_5_years: row.parsedData.life_in_5_years || null,
-          last_thing_that_made_you_laugh: row.parsedData.last_thing_that_made_you_laugh || null,
-          dream_date: row.parsedData.dream_date || null,
-          family_notes: row.parsedData.family_notes || null,
-          vice_or_red_flag: row.parsedData.vice_or_red_flag || null,
-          dealbreaker: row.parsedData.dealbreaker || null,
-          random_curiosities: row.parsedData.random_curiosities || null,
-          referral_notes: row.parsedData.referral_notes || null,
-          values_or_worldview: row.parsedData.values_or_worldview || null,
-          priority_weights: row.parsedData.priority_weights,
-          ready_for_love: row.parsedData.ready_for_love,
-          grand_amour: row.parsedData.grand_amour || null,
-          preferred_partner_age_min: row.parsedData.preferred_partner_age_min,
-          preferred_partner_age_max: row.parsedData.preferred_partner_age_max,
-          okay_with_some_deviation: row.parsedData.okay_with_some_deviation,
-          has_kids: row.parsedData.has_kids,
-          partner_has_kids: row.parsedData.partner_has_kids,
-          travels_world: row.parsedData.travels_world,
-          partner_travels_world: row.parsedData.partner_travels_world,
-          is_divorced: row.parsedData.is_divorced,
-          partner_is_divorced: row.parsedData.partner_is_divorced,
-          smokes_drug_friendly: row.parsedData.smokes_drug_friendly,
-          partner_smokes_drug_friendly: row.parsedData.partner_smokes_drug_friendly,
-          has_tattoos: row.parsedData.has_tattoos,
-          partner_has_tattoos: row.parsedData.partner_has_tattoos,
-          fitness_level: row.parsedData.fitness_level,
-          partner_fitness: row.parsedData.partner_fitness,
-          close_with_family: row.parsedData.close_with_family,
-          partner_close_with_family: row.parsedData.partner_close_with_family,
-        })
-
-      if (participantError) {
-        console.error('CSV participant insert error:', participantError)
-        throw new Error(`Unable to import row ${row.rowNumber}.`)
-      }
-
-      const { error: applicationError } = await supabase
-        .from('applications')
-        .insert({
-          participant_id: participantId,
-          status: 'applied',
-          interview_required: false,
-          interview_completed: false,
-          source_event_id: null,
-          organizer_notes: null,
-          tags: null,
-          interview_date: null,
-          assigned_event_id: null,
-        })
-
-      if (applicationError) {
-        console.error('CSV application insert error:', applicationError)
-        await supabase.from('participants').delete().eq('id', participantId)
+      try {
+        await fetchMutation(api.applications.submitApplication, row.parsedData as any)
+        insertedCount += 1
+      } catch (err: any) {
+        console.error('CSV application insert error:', err)
         throw new Error(`Unable to create application for row ${row.rowNumber}.`)
       }
-
-      insertedCount += 1
     }
 
     revalidatePath('/participants')
@@ -246,43 +178,22 @@ async function loadExistingParticipantMatches(
     rawData: Record<string, unknown>
   }>
 ): Promise<ExistingParticipantMatch[]> {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const supabase = await createClient() as any
   const uniqueContacts = Array.from(new Set(rows.map((row) => String(row.rawData.contact_info ?? '').trim()).filter(Boolean)))
   const uniqueNames = Array.from(new Set(rows.map((row) => String(row.rawData.full_name ?? '').trim()).filter(Boolean)))
 
-  const queries: Array<Promise<{ data: ExistingParticipantMatch[] | null }>> = []
+  if (uniqueContacts.length === 0 && uniqueNames.length === 0) return []
 
-  if (uniqueContacts.length > 0) {
-    queries.push(
-      supabase
-        .from('participants')
-        .select('id, contact_info, full_name, birthday')
-        .in('contact_info', uniqueContacts)
-    )
-  }
+  const duplicates = await fetchQuery(api.import.getDuplicates, {
+    contacts: uniqueContacts,
+    names: uniqueNames,
+  })
 
-  if (uniqueNames.length > 0) {
-    queries.push(
-      supabase
-        .from('participants')
-        .select('id, contact_info, full_name, birthday')
-        .in('full_name', uniqueNames)
-    )
-  }
-
-  if (queries.length === 0) return []
-
-  const results = await Promise.all(queries)
-  const deduped = new Map<string, ExistingParticipantMatch>()
-
-  for (const result of results) {
-    for (const participant of result.data ?? []) {
-      deduped.set(participant.id, participant)
-    }
-  }
-
-  return Array.from(deduped.values())
+  return duplicates.map(d => ({
+    id: d.id,
+    contact_info: d.contact_info,
+    full_name: d.full_name,
+    birthday: d.birthday || null,
+  }))
 }
 
 function buildPreviewResult(headers: string[], preparedRows: PreparedImportRow[]): CsvPreviewResult {

@@ -1,11 +1,12 @@
-import type { Metadata } from 'next'
-import Link from 'next/link'
-import { ApplicationFormClient } from '@/app/apply/application-form-client'
-import { createOrganizerParticipant } from '@/app/actions/application'
+'use client'
 
-export const metadata: Metadata = { title: 'Add Participant' }
+import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { ApplicationFormClient } from '@/app/apply/application-form-client'
 
 export default function NewParticipantPage() {
+  const router = useRouter()
+
   return (
     <div className="max-w-3xl">
       <div className="mb-6 flex items-center gap-4">
@@ -28,10 +29,10 @@ export default function NewParticipantPage() {
       </div>
 
       <ApplicationFormClient
-        submissionAction={createOrganizerParticipant}
         submitLabel="Create Participant"
         pendingLabel="Creating…"
         footerNote="This creates both the participant profile and its linked application record for organizer review."
+        onSuccess={() => router.push('/participants')}
       />
     </div>
   )

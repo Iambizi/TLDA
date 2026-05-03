@@ -1,16 +1,13 @@
-import type { Metadata } from 'next'
-import { notFound } from 'next/navigation'
+'use client'
+
+import { notFound, useParams } from 'next/navigation'
 import Link from 'next/link'
-import { createClient } from '@/lib/supabase/server'
+import { useQuery } from 'convex/react'
+import { api } from '../../../../../convex/_generated/api'
+import type { Id } from '../../../../../convex/_generated/dataModel'
 import { ReviewForm } from './review-form'
 import { DeleteParticipantCard } from './delete-participant-card'
 import { LIFESTYLE_ATTRIBUTES, LIFESTYLE_PREFERENCE_LABELS, READINESS_LABELS } from '@/lib/constants'
-
-export const metadata: Metadata = { title: 'Participant Detail' }
-
-interface ParticipantPageProps {
-  params: Promise<{ id: string }>
-}
 
 function SectionHeading({ title }: { title: string }) {
   return (
@@ -46,30 +43,21 @@ function FieldDisplay({ label, value, isSensitive = false }: { label: string, va
   )
 }
 
-export default async function ParticipantPage({ params }: ParticipantPageProps) {
-  const { id } = await params
-  const supabase = await createClient() as any
+export default function ParticipantPage() {
+  const params = useParams<{ id: Id<'participants'> }>()
+  const id = params?.id
 
-  const { data: participant } = await supabase
-    .from('participants')
-    .select(`
-      *,
-      applications (
-        id,
-        status,
-        organizer_notes,
-        submitted_at
-      )
-    `)
-    .eq('id', id)
-    .single()
+  const participant = useQuery(api.participants.getById, id ? { id } : 'skip')
 
-  if (!participant) {
+  if (participant === undefined) {
+    return <div className="p-8 text-sm" style={{ color: 'var(--muted)' }}>Loading participant...</div>
+  }
+
+  if (participant === null) {
     notFound()
   }
 
-  // MVP constraint: One application per participant
-  const application = participant.applications?.[0]
+  const { application, interviews } = participant
 
   if (!application) {
     return (
@@ -79,7 +67,7 @@ export default async function ParticipantPage({ params }: ParticipantPageProps) 
     )
   }
 
-  const priorityWeights = participant.priority_weights as Record<string, number> | null
+  const priorityWeights = participant.priority_weights
   const submittedAt = new Date(application.submitted_at).toLocaleString('en-US', { 
     dateStyle: 'medium', timeStyle: 'short' 
   })
@@ -212,14 +200,15 @@ export default async function ParticipantPage({ params }: ParticipantPageProps) 
             </h3>
             
             <ReviewForm 
-              applicationId={application.id}
+              applicationId={application._id}
               initialStatus={application.status}
               initialNotes={application.organizer_notes}
             />
           </div>
 
+
           <DeleteParticipantCard
-            participantId={participant.id}
+            participantId={participant._id}
             participantName={participant.full_name}
           />
         </div>

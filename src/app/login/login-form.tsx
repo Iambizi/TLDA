@@ -1,22 +1,42 @@
 'use client'
 
-import { useActionState } from 'react'
-import { login } from '@/app/actions/auth'
+import { useState } from 'react'
+import { useAuthActions } from '@convex-dev/auth/react'
 
 export function LoginForm() {
-  const [state, action, pending] = useActionState(login, undefined)
+  const { signIn } = useAuthActions()
+  const [error, setError] = useState<string | null>(null)
+  const [pending, setPending] = useState(false)
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    setPending(true)
+    setError(null)
+
+    const formData = new FormData(event.currentTarget)
+    const email = formData.get('email') as string
+    const password = formData.get('password') as string
+
+    try {
+      await signIn('password', { email, password, flow: 'signIn' })
+    } catch (err) {
+      setError('Invalid credentials. Please try again.')
+    } finally {
+      setPending(false)
+    }
+  }
 
   return (
-    <form action={action} className="flex flex-col gap-5" id="login-form">
+    <form onSubmit={handleSubmit} className="flex flex-col gap-5" id="login-form">
       {/* Error message */}
-      {state && 'error' in state && (
+      {error && (
         <div
           className="rounded-lg px-4 py-3 text-sm"
           style={{ background: '#fef2f2', color: '#b91c1c', border: '1px solid #fecaca' }}
           role="alert"
           id="login-error"
         >
-          {state.error}
+          {error}
         </div>
       )}
 

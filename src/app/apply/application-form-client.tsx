@@ -1,15 +1,13 @@
 'use client'
 
 import { useState, type FormEvent } from 'react'
+import { useRouter } from 'next/navigation'
 import { useForm, FormProvider, type FieldValues } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useActionState, startTransition } from 'react'
 import { ApplicationFormSchema } from '@/lib/schemas'
-import { DEFAULT_PRIORITY_WEIGHTS } from '@/lib/constants'
-import {
-  submitApplication,
-  type ApplicationSubmissionState,
-} from '@/app/actions/application'
+import { DEFAULT_PRIORITY_WEIGHTS, LIFESTYLE_ATTRIBUTES } from '@/lib/constants'
+import { useMutation } from 'convex/react'
+import { api } from '../../../convex/_generated/api'
 import { Section1Fields } from '@/app/apply/section-1-fields'
 import { Section2Fields } from '@/app/apply/section-2-fields'
 import { Section3Fields } from '@/app/apply/section-3-fields'
@@ -22,27 +20,25 @@ const SECTIONS = [
 
 const SECTION_1_KEYS = ['full_name', 'contact_info', 'gender', 'age', 'birthday', 'work']
 
-type ApplicationFormAction = (
-  prevState: ApplicationSubmissionState,
-  formData: FormData
-) => Promise<ApplicationSubmissionState>
-
 interface ApplicationFormClientProps {
-  submissionAction?: ApplicationFormAction
   submitLabel?: string
   pendingLabel?: string
   footerNote?: string
+  onSuccess?: () => void
 }
 
 export function ApplicationFormClient({
-  submissionAction = submitApplication,
   submitLabel = 'Submit Application',
   pendingLabel = 'Submitting…',
   footerNote = 'Your information is private and will only be seen by the organizer.',
+  onSuccess,
 }: ApplicationFormClientProps) {
+  const router = useRouter()
+  const submitApplication = useMutation(api.applications.submitApplication)
   const [step, setStep] = useState(1)
   const [draftSaved, setDraftSaved] = useState(false)
-  const [submitState, submitAction, pending] = useActionState(submissionAction, undefined)
+  const [error, setError] = useState<string | null>(null)
+  const [pending, setPending] = useState(false)
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const methods = useForm<any>({
@@ -85,19 +81,21 @@ export function ApplicationFormClient({
 
   const onSubmitHandler = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    void handleSubmit((data: FieldValues) => {
-      const fd = new FormData()
-      for (const [key, value] of Object.entries(data)) {
-        if (key === 'priority_weights') {
-          fd.append(key, JSON.stringify(value))
-        } else if (value !== undefined && value !== null) {
-          fd.append(key, String(value))
+    void handleSubmit(async (data: FieldValues) => {
+      setPending(true)
+      setError(null)
+      try {
+        await submitApplication(data as any)
+        if (onSuccess) {
+          onSuccess()
+        } else {
+          router.push('/apply/success')
         }
+      } catch (err: any) {
+        setError(err.message)
+      } finally {
+        setPending(false)
       }
-
-      startTransition(() => {
-        submitAction(fd)
-      })
     })(e)
   }
 
@@ -151,13 +149,13 @@ export function ApplicationFormClient({
           {step === 3 && <Section2Fields sectionNumber={3} />}
 
           {/* Global submit error */}
-          {submitState && 'error' in submitState && (
+          {error && (
             <div
               className="mt-4 rounded-lg px-4 py-3 text-sm"
               style={{ background: '#fef2f2', color: '#b91c1c', border: '1px solid #fecaca' }}
               role="alert"
             >
-              {submitState.error}
+              {error}
             </div>
           )}
 

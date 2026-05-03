@@ -1,29 +1,46 @@
 'use client'
 
-import { useActionState } from 'react'
-import { deleteParticipant } from '@/app/actions/participants'
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { useMutation } from 'convex/react'
+import { api } from '../../../../../convex/_generated/api'
+import type { Id } from '../../../../../convex/_generated/dataModel'
 
 interface DeleteParticipantCardProps {
-  participantId: string
+  participantId: Id<'participants'>
   participantName: string
 }
 
 export function DeleteParticipantCard({ participantId, participantName }: DeleteParticipantCardProps) {
-  const deleteWithId = deleteParticipant.bind(null, participantId)
-  const [state, action, pending] = useActionState(deleteWithId, undefined)
+  const deleteParticipant = useMutation(api.participants.deleteParticipant)
+  const router = useRouter()
+  const [error, setError] = useState<string | null>(null)
+  const [pending, setPending] = useState(false)
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    
+    const confirmed = window.confirm(
+      `Delete ${participantName} and all related applications, interviews, roster assignments, and match logs? This cannot be undone.`
+    )
+
+    if (!confirmed) return
+
+    setPending(true)
+    setError(null)
+
+    try {
+      await deleteParticipant({ participantId })
+      router.push('/participants')
+    } catch (err: any) {
+      setError(err.message)
+      setPending(false)
+    }
+  }
 
   return (
     <form
-      action={action}
-      onSubmit={(event) => {
-        const confirmed = window.confirm(
-          `Delete ${participantName} and all related applications, interviews, roster assignments, and match logs? This cannot be undone.`
-        )
-
-        if (!confirmed) {
-          event.preventDefault()
-        }
-      }}
+      onSubmit={handleSubmit}
       className="rounded-2xl border p-6 shadow-sm bg-white"
       style={{ borderColor: '#fecaca' }}
     >
@@ -34,20 +51,20 @@ export function DeleteParticipantCard({ participantId, participantName }: Delete
         This permanently deletes the participant record and all related organizer data.
       </p>
 
-      {state && 'error' in state && (
+      {error && (
         <div
           className="rounded-lg px-4 py-3 text-sm mb-4"
           style={{ background: '#fef2f2', color: '#b91c1c', border: '1px solid #fecaca' }}
           role="alert"
         >
-          {state.error}
+          {error}
         </div>
       )}
 
       <button
         type="submit"
         disabled={pending}
-        className="w-full rounded-xl py-2.5 text-sm font-medium text-white transition-all disabled:opacity-60"
+        className="w-full rounded-xl py-2.5 text-sm font-medium text-white transition-all disabled:opacity-60 cursor-pointer"
         style={{ background: pending ? '#fca5a5' : '#dc2626' }}
       >
         {pending ? 'Deleting...' : 'Delete Participant'}

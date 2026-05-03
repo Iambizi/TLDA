@@ -2,7 +2,9 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { logout } from '@/app/actions/auth'
+import { useAuthActions } from '@convex-dev/auth/react'
+import { useQuery } from 'convex/react'
+import { api } from '../../convex/_generated/api'
 
 const NAV_ITEMS = [
   { href: '/dashboard', label: 'Dashboard', icon: '📊' },
@@ -13,12 +15,12 @@ const NAV_ITEMS = [
   { href: '/settings/questionnaire', label: 'Questionnaire', icon: '📝' },
 ]
 
-interface OrganizerNavProps {
-  userEmail: string
-}
-
-export function OrganizerNav({ userEmail }: OrganizerNavProps) {
+export function OrganizerNav() {
   const pathname = usePathname()
+  const { signOut } = useAuthActions()
+  const user = useQuery(api.users.current)
+  
+  const userEmail = user?.email ?? 'Loading...'
 
   return (
     <aside
@@ -66,7 +68,12 @@ export function OrganizerNav({ userEmail }: OrganizerNavProps) {
           </p>
           <p className="text-xs" style={{ color: 'var(--muted)' }}>Organizer</p>
         </div>
-        <form action={logout}>
+        <form
+          onSubmit={(e) => {
+            e.preventDefault()
+            void signOut()
+          }}
+        >
           <button
             id="nav-logout"
             type="submit"

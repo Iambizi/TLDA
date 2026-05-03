@@ -1,96 +1,28 @@
-import type { Metadata } from "next";
+'use client'
+
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
-import type { Database } from "@/types/database";
+import { useSearchParams } from "next/navigation";
+import { useQuery } from "convex/react";
+import { api } from "../../../../convex/_generated/api";
 import {
   APPLICATION_STATUS_LABELS,
   APPLICATION_STATUS_COLORS,
 } from "@/lib/constants";
 
-export const metadata: Metadata = { title: "Participants" };
+export default function ParticipantsPage() {
+  const searchParams = useSearchParams()
+  const statusFilter = searchParams.get('status')
 
-type ApplicationStatus = Database["public"]["Enums"]["application_status"];
+  const participants = useQuery(api.participants.list)
 
-interface ParticipantListRow {
-  id: string;
-  status: ApplicationStatus;
-  submitted_at: string;
-  participants: {
-    id: string;
-    full_name: string;
-    age: number | null;
-    gender: string | null;
-    contact_info: string;
-  } | null;
-}
-
-interface FormattedParticipantApplication {
-  id: string;
-  participant_id: string | undefined;
-  status: ApplicationStatus;
-  submitted_at: string;
-  full_name: string;
-  age: number | null;
-  gender: string | null;
-  contact: string | undefined;
-}
-
-interface ParticipantsPageProps {
-  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
-}
-
-export default async function ParticipantsPage({
-  searchParams,
-}: ParticipantsPageProps) {
-  const supabase = await createClient();
-  const { status } = await searchParams;
-
-  const statusFilter = typeof status === "string" ? status : undefined;
-
-  let query = supabase
-    .from("applications")
-    .select(
-      `
-      id,
-      status,
-      submitted_at,
-      participants:participant_id (
-        id,
-        full_name,
-        age,
-        gender,
-        contact_info
-      )
-    `,
-    )
-    .order("submitted_at", { ascending: false });
-
-  if (
-    statusFilter &&
-    Object.keys(APPLICATION_STATUS_LABELS).includes(statusFilter)
-  ) {
-    query = query.eq("status", statusFilter as ApplicationStatus);
+  if (participants === undefined) {
+    return <div className="p-8 text-sm" style={{ color: 'var(--muted)' }}>Loading participants...</div>
   }
 
-  const { data: applicationsData, error } = await query;
-
-  if (error) {
-    console.error("Error fetching participants:", error);
-  }
-
-  const applications = (applicationsData ?? []) as ParticipantListRow[];
-
-  const formattedApplications: FormattedParticipantApplication[] =
-    applications.map((app) => ({
-      id: app.id,
-      participant_id: app.participants?.id,
-      status: app.status,
-      submitted_at: app.submitted_at,
-      full_name: app.participants?.full_name ?? "Unknown",
-      age: app.participants?.age ?? null,
-      gender: app.participants?.gender ?? null,
-      contact: app.participants?.contact_info,
-    }));
+  const filtered = participants.filter((p) => {
+    if (!statusFilter) return true;
+    return p.application?.status === statusFilter;
+  });
 
   return (
     <div>
@@ -103,8 +35,8 @@ export default async function ParticipantsPage({
             Participants
           </h1>
           <p className="text-sm" style={{ color: "var(--muted)" }}>
-            {formattedApplications.length} total applicant
-            {formattedApplications.length === 1 ? "" : "s"} found.
+            {filtered.length} total applicant
+            {filtered.length === 1 ? "" : "s"} found.
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -173,7 +105,7 @@ export default async function ParticipantsPage({
         className="rounded-2xl border overflow-hidden"
         style={{ background: "var(--surface)", borderColor: "var(--border)" }}
       >
-        {formattedApplications.length === 0 ? (
+        {filtered.length === 0 ? (
           <div className="p-12 text-center">
             <p className="text-sm" style={{ color: "var(--muted)" }}>
               No participants found matching the current filters.
@@ -215,18 +147,21 @@ export default async function ParticipantsPage({
                 </tr>
               </thead>
               <tbody>
-                {formattedApplications.map((app, index) => {
+                {filtered.map((p, index) => {
+                  const status = p.application?.status ?? 'applied'
                   const statusColorClass =
-                    APPLICATION_STATUS_COLORS[app.status] ||
+                    APPLICATION_STATUS_COLORS[status as keyof typeof APPLICATION_STATUS_COLORS] ||
                     "bg-gray-100 text-gray-500";
-                  const date = new Date(app.submitted_at).toLocaleDateString(
+                  
+                  const submittedAt = p.application?.submitted_at
+                  const date = submittedAt ? new Date(submittedAt).toLocaleDateString(
                     "en-US",
                     { month: "short", day: "numeric", year: "numeric" },
-                  );
+                  ) : 'Unknown';
 
                   return (
                     <tr
-                      key={app.id}
+                      key={p._id}
                       className="hover:bg-neutral-50/50 transition-colors"
                       style={
                         index === 0
@@ -239,11 +174,11 @@ export default async function ParticipantsPage({
                     >
                       <td className="px-6 py-4">
                         <Link
-                          href={`/participants/${app.participant_id}`}
+                          href={`/participants/${p._id}`}
                           className="font-medium hover:underline"
                           style={{ color: "var(--neutral-900)" }}
                         >
-                          {app.full_name}
+                          {p.full_name}
                         </Link>
                       </td>
                       <td
@@ -252,22 +187,22 @@ export default async function ParticipantsPage({
                       >
                         <span
                           className="truncate max-w-[200px] block"
-                          title={app.contact}
+                          title={p.contact_info}
                         >
-                          {app.contact}
+                          {p.contact_info}
                         </span>
                       </td>
                       <td
                         className="px-6 py-4"
                         style={{ color: "var(--neutral-600)" }}
                       >
-                        {[app.age, app.gender].filter(Boolean).join(" • ")}
+                        {[p.age, p.gender].filter(Boolean).join(" • ")}
                       </td>
                       <td className="px-6 py-4">
                         <span
                           className={`inline-flex items-center px-2 py-1 rounded-md text-xs font-medium ${statusColorClass}`}
                         >
-                          {APPLICATION_STATUS_LABELS[app.status] || app.status}
+                          {APPLICATION_STATUS_LABELS[status as keyof typeof APPLICATION_STATUS_LABELS] || status}
                         </span>
                       </td>
                       <td

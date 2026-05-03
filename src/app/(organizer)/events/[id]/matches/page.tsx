@@ -1,66 +1,43 @@
-import type { Metadata } from 'next'
-import { notFound } from 'next/navigation'
+'use client'
+
+import { notFound, useParams } from 'next/navigation'
 import Link from 'next/link'
-import { createClient } from '@/lib/supabase/server'
+import { useQuery } from 'convex/react'
+import { api } from '../../../../../../convex/_generated/api'
+import type { Id } from '../../../../../../convex/_generated/dataModel'
 import { MatchLogger } from './match-logger'
 import { INTEREST_STATUS_LABELS } from '@/lib/constants'
 
-export const metadata: Metadata = { title: 'Match Outcomes' }
+export default function MatchesPage() {
+  const params = useParams<{ id: Id<'events'> }>()
+  const id = params?.id
 
-interface MatchesPageProps {
-  params: Promise<{ id: string }>
-}
+  const eventData = useQuery(api.events.getById, id ? { id } : 'skip')
+  const matchOutcomesRaw = useQuery(api.matches.listByEvent, id ? { eventId: id } : 'skip')
 
-export default async function MatchesPage({ params }: MatchesPageProps) {
-  const { id } = await params
-  const supabase = await createClient() as any
+  if (eventData === undefined || matchOutcomesRaw === undefined) {
+    return <div className="p-8 text-sm" style={{ color: 'var(--muted)' }}>Loading matches...</div>
+  }
 
-  // 1. Fetch event
-  const { data: event } = await supabase
-    .from('events')
-    .select('id, title, event_date')
-    .eq('id', id)
-    .single()
-
-  if (!event) {
+  if (eventData === null) {
     notFound()
   }
 
-  // 2. Fetch logged matches
-  const { data: matchOutcomesRaw } = await supabase
-    .from('match_outcomes')
-    .select(`
-      id,
-      interest_status,
-      organizer_notes,
-      created_at,
-      participant_a:participants!participant_a_id(id, full_name),
-      participant_b:participants!participant_b_id(id, full_name)
-    `)
-    .eq('event_id', id)
-    .order('created_at', { ascending: false })
+  const { roster, ...event } = eventData
 
-  const matchOutcomes = (matchOutcomesRaw || []).map((mo: any) => ({
-    id: mo.id,
+  const matchOutcomes = matchOutcomesRaw.map((mo) => ({
+    id: mo._id,
     interest_status: mo.interest_status,
     notes: mo.organizer_notes,
-    date: new Date(mo.created_at).toLocaleDateString(),
-    participant_a: { id: mo.participant_a.id, name: mo.participant_a.full_name },
-    participant_b: { id: mo.participant_b.id, name: mo.participant_b.full_name },
+    date: new Date(mo.updatedAt).toLocaleDateString(),
+    participant_a: { id: mo.participantA?._id, name: mo.participantA?.full_name ?? 'Unknown' },
+    participant_b: { id: mo.participantB?._id, name: mo.participantB?.full_name ?? 'Unknown' },
   }))
 
-  // 3. Fetch roster participants for preliminary matching
-  const { data: attendeesRaw } = await supabase
-    .from('event_participants')
-    .select(`
-      participant_id,
-      participants(id, full_name)
-    `)
-    .eq('event_id', id)
-
-  const attendedParticipants = (attendeesRaw || []).map((ap: any) => ({
-    id: ap.participants.id,
-    full_name: ap.participants.full_name,
+  // All roster members are available for preliminary matching
+  const rosterParticipants = roster.map((rp) => ({
+    id: rp.participant_id,
+    full_name: rp.participant?.full_name ?? 'Unknown',
   }))
 
   return (
@@ -80,20 +57,11 @@ export default async function MatchesPage({ params }: MatchesPageProps) {
         {/* Left Column: Logged Matches */}
         <div className="flex-1">
           <div className="mb-8">
-            <div className="flex items-center gap-2">
-              <h1 className="text-3xl font-semibold" style={{ color: 'var(--neutral-900)' }}>
-                Preliminary Matching
-              </h1>
-              <span
-                title="Use this page to plan pairings before the event and update outcomes after follow-up."
-                className="inline-flex h-5 w-5 items-center justify-center rounded-full text-xs font-semibold"
-                style={{ background: 'var(--neutral-200)', color: 'var(--neutral-600)' }}
-              >
-                i
-              </span>
-            </div>
+            <h1 className="text-3xl font-semibold mb-2" style={{ color: 'var(--neutral-900)' }}>
+              Match Outcomes
+            </h1>
             <p className="text-sm" style={{ color: 'var(--muted)' }}>
-              Pairing and outcome tracker for {event.title}
+              Preliminary & post-event tracker for {event.title}
             </p>
           </div>
 
@@ -113,7 +81,7 @@ export default async function MatchesPage({ params }: MatchesPageProps) {
                     </tr>
                   </thead>
                   <tbody className="divide-y" style={{ borderColor: 'var(--border)' }}>
-                    {matchOutcomes.map((match: any) => (
+                    {matchOutcomes.map((match) => (
                       <tr key={match.id} className="hover:bg-neutral-50/50 transition-colors">
                         <td className="px-6 py-4 font-medium" style={{ color: 'var(--neutral-900)' }}>
                           <Link href={`/participants/${match.participant_a.id}`} className="hover:underline">
@@ -146,10 +114,10 @@ export default async function MatchesPage({ params }: MatchesPageProps) {
           </div>
         </div>
 
-        {/* Right Column: Matcher */}
+        {/* Right Column: Match Logger */}
         <div className="w-full lg:w-80 shrink-0">
           <div className="sticky top-8">
-            <MatchLogger eventId={event.id} participants={attendedParticipants} />
+            <MatchLogger eventId={event._id} participants={rosterParticipants} />
           </div>
         </div>
 

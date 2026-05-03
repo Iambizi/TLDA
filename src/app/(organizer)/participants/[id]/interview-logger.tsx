@@ -1,32 +1,63 @@
 'use client'
 
-import { useActionState } from 'react'
-import { logInterview } from '@/app/actions/interviews'
+import { useState } from 'react'
+import { useMutation } from 'convex/react'
+import { api } from '../../../../../convex/_generated/api'
+import type { Id } from '../../../../../convex/_generated/dataModel'
 import { INTERVIEW_OUTCOME_LABELS } from '@/lib/constants'
 
 interface InterviewLoggerProps {
-  participantId: string
-  applicationId: string
+  participantId: Id<'participants'>
+  applicationId: Id<'applications'>
 }
 
 export function InterviewLogger({ participantId, applicationId }: InterviewLoggerProps) {
-  const [state, action, pending] = useActionState(logInterview, undefined)
+  const logInterview = useMutation(api.interviews.logInterview)
+  const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState(false)
+  const [pending, setPending] = useState(false)
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    setPending(true)
+    setError(null)
+    setSuccess(false)
+
+    const formData = new FormData(event.currentTarget)
+    const scheduled_at = formData.get('scheduled_at') as string
+    const outcome = formData.get('outcome') as string
+    const notes = formData.get('notes') as string
+
+    try {
+      await logInterview({
+        participant_id: participantId,
+        application_id: applicationId,
+        scheduled_at: scheduled_at ? new Date(scheduled_at).getTime() : undefined,
+        outcome: outcome as any,
+        notes: notes || undefined,
+      })
+      setSuccess(true)
+      // reset form optionally
+      event.currentTarget.reset()
+    } catch (err: any) {
+      setError(err.message)
+    } finally {
+      setPending(false)
+    }
+  }
 
   return (
-    <form action={action} className="flex flex-col gap-4">
-      {state && 'error' in state && (
+    <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+      {error && (
         <div className="rounded-lg px-3 py-2 text-xs" style={{ background: '#fef2f2', color: '#b91c1c', border: '1px solid #fecaca' }}>
-          {state.error}
+          {error}
         </div>
       )}
-      {state && 'success' in state && (
+      {success && (
         <div className="rounded-lg px-3 py-2 text-xs" style={{ background: '#ecfdf5', color: '#047857', border: '1px solid #a7f3d0' }}>
           Interview logged successfully.
         </div>
       )}
-
-      <input type="hidden" name="participant_id" value={participantId} />
-      <input type="hidden" name="application_id" value={applicationId} />
 
       <div className="flex flex-col gap-1.5">
         <label htmlFor="scheduled_at" className="text-sm font-medium" style={{ color: 'var(--neutral-700)' }}>
@@ -72,7 +103,7 @@ export function InterviewLogger({ participantId, applicationId }: InterviewLogge
       <button
         type="submit"
         disabled={pending}
-        className="w-full rounded-xl py-2 text-sm font-medium text-white transition-all disabled:opacity-60 mt-2"
+        className="w-full rounded-xl py-2 text-sm font-medium text-white transition-all disabled:opacity-60 mt-2 cursor-pointer"
         style={{ background: pending ? 'var(--neutral-400)' : 'var(--neutral-900)' }}
       >
         {pending ? 'Saving...' : 'Log Interview'}

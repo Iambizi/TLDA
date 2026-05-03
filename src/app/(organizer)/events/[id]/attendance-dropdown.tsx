@@ -1,24 +1,32 @@
 'use client'
 
 import { useTransition } from 'react'
-import { updateAttendanceStatus } from '@/app/actions/events'
+import { useMutation } from 'convex/react'
+import { api } from '../../../../../convex/_generated/api'
+import type { Id } from '../../../../../convex/_generated/dataModel'
 import { ATTENDANCE_STATUS_LABELS } from '@/lib/constants'
 
 interface AttendanceDropdownProps {
-  eventId: string
-  participantId: string
+  eventId: Id<'events'>
+  participantId: Id<'participants'>
   initialStatus: string
 }
 
 export function AttendanceDropdown({ eventId, participantId, initialStatus }: AttendanceDropdownProps) {
+  const updateAttendance = useMutation(api.events.updateAttendanceStatus)
   const [isPending, startTransition] = useTransition()
 
   const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const newStatus = e.target.value
     startTransition(async () => {
-      const res = await updateAttendanceStatus(eventId, participantId, newStatus)
-      if (res?.error) {
-        alert(res.error)
+      try {
+        await updateAttendance({
+          eventId,
+          participantId,
+          status: newStatus as any
+        })
+      } catch (err: any) {
+        alert(err.message)
       }
     })
   }

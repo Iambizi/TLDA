@@ -1,11 +1,13 @@
 'use client'
 
-import { useActionState } from 'react'
-import { logMatchOutcome } from '@/app/actions/matches'
+import { useState } from 'react'
+import { useMutation } from 'convex/react'
+import { api } from '../../../../../../convex/_generated/api'
+import type { Id } from '../../../../../../convex/_generated/dataModel'
 
 interface MatchLoggerProps {
-  eventId: string
-  participants: { id: string; full_name: string }[]
+  eventId: Id<'events'>
+  participants: { id: Id<'participants'>; full_name: string }[]
 }
 
 const connectionStatuses = [
@@ -17,7 +19,10 @@ const connectionStatuses = [
 ]
 
 export function MatchLogger({ eventId, participants }: MatchLoggerProps) {
-  const [state, action, pending] = useActionState(logMatchOutcome, undefined)
+  const logMatchOutcome = useMutation(api.matches.logMatchOutcome)
+  const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState(false)
+  const [pending, setPending] = useState(false)
 
   if (participants.length < 2) {
     return (
@@ -27,8 +32,37 @@ export function MatchLogger({ eventId, participants }: MatchLoggerProps) {
     )
   }
 
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    setPending(true)
+    setError(null)
+    setSuccess(false)
+
+    const formData = new FormData(e.currentTarget)
+    const participant_a_id = formData.get('participant_a_id') as string
+    const participant_b_id = formData.get('participant_b_id') as string
+    const interest_status = formData.get('connection_status') as string
+    const organizer_notes = formData.get('organizer_notes') as string
+
+    try {
+      await logMatchOutcome({
+        event_id: eventId,
+        participant_a_id: participant_a_id as Id<'participants'>,
+        participant_b_id: participant_b_id as Id<'participants'>,
+        interest_status: interest_status as any,
+        organizer_notes: organizer_notes || undefined,
+      })
+      setSuccess(true)
+      e.currentTarget.reset()
+    } catch (err: any) {
+      setError(err.message)
+    } finally {
+      setPending(false)
+    }
+  }
+
   return (
-    <form action={action} className="flex flex-col gap-4 p-6" style={{ background: 'var(--neutral-50)', borderRadius: '1rem', border: '1px solid var(--border)' }}>
+    <form onSubmit={handleSubmit} className="flex flex-col gap-4 p-6" style={{ background: 'var(--neutral-50)', borderRadius: '1rem', border: '1px solid var(--border)' }}>
       <div>
         <div className="flex items-center gap-2">
           <h3 className="text-sm font-semibold" style={{ color: 'var(--neutral-900)' }}>
@@ -46,19 +80,17 @@ export function MatchLogger({ eventId, participants }: MatchLoggerProps) {
           Select two roster participants and track the outcome.
         </p>
       </div>
-      
-      {state && 'error' in state && (
+
+      {error && (
         <div className="rounded-lg px-3 py-2 text-xs" style={{ background: '#fef2f2', color: '#b91c1c', border: '1px solid #fecaca' }}>
-          {state.error}
+          {error}
         </div>
       )}
-      {state && 'success' in state && (
+      {success && (
         <div className="rounded-lg px-3 py-2 text-xs" style={{ background: '#ecfdf5', color: '#047857', border: '1px solid #a7f3d0' }}>
           Match logged successfully.
         </div>
       )}
-
-      <input type="hidden" name="event_id" value={eventId} />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="flex flex-col gap-1.5">
@@ -143,7 +175,7 @@ export function MatchLogger({ eventId, participants }: MatchLoggerProps) {
       <button
         type="submit"
         disabled={pending}
-        className="w-full rounded-xl py-2 text-sm font-medium text-white transition-all disabled:opacity-60 mt-2"
+        className="w-full rounded-xl py-2 text-sm font-medium text-white transition-all disabled:opacity-60 mt-2 cursor-pointer"
         style={{ background: pending ? 'var(--neutral-400)' : 'var(--neutral-900)' }}
       >
         {pending ? 'Saving...' : 'Save Match'}

@@ -1,27 +1,55 @@
 'use client'
 
-import { useActionState, useEffect } from 'react'
-import { updateApplicationReview } from '@/app/actions/participants'
+import { useState } from 'react'
+import { useMutation } from 'convex/react'
+import { api } from '../../../../../convex/_generated/api'
+import type { Id } from '../../../../../convex/_generated/dataModel'
 import { APPLICATION_STATUS_LABELS } from '@/lib/constants'
 
 interface ReviewFormProps {
-  applicationId: string
+  applicationId: Id<'applications'>
   initialStatus: string
-  initialNotes: string | null
+  initialNotes: string | null | undefined
 }
 
 export function ReviewForm({ applicationId, initialStatus, initialNotes }: ReviewFormProps) {
-  const updateWithId = updateApplicationReview.bind(null, applicationId)
-  const [state, action, pending] = useActionState(updateWithId, undefined)
+  const updateApplication = useMutation(api.participants.updateApplicationReview)
+  const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState(false)
+  const [pending, setPending] = useState(false)
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    setPending(true)
+    setError(null)
+    setSuccess(false)
+
+    const formData = new FormData(event.currentTarget)
+    const status = formData.get('status') as string
+    const organizer_notes = formData.get('organizer_notes') as string
+
+    try {
+      await updateApplication({ 
+        applicationId, 
+        status: status as any, 
+        organizer_notes: organizer_notes || undefined 
+      })
+      setSuccess(true)
+    } catch (err: any) {
+      setError(err.message)
+    } finally {
+      setPending(false)
+    }
+  }
 
   return (
-    <form action={action} className="flex flex-col gap-5">
-      {state && 'error' in state && (
+    <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+      {error && (
         <div className="rounded-lg px-4 py-3 text-sm" style={{ background: '#fef2f2', color: '#b91c1c', border: '1px solid #fecaca' }}>
-          {state.error}
+          {error}
         </div>
       )}
-      {state && 'success' in state && (
+      {success && (
         <div className="rounded-lg px-4 py-3 text-sm" style={{ background: '#ecfdf5', color: '#047857', border: '1px solid #a7f3d0' }}>
           Application updated successfully.
         </div>
@@ -62,7 +90,7 @@ export function ReviewForm({ applicationId, initialStatus, initialNotes }: Revie
       <button
         type="submit"
         disabled={pending}
-        className="w-full rounded-xl py-2.5 text-sm font-medium text-white transition-all disabled:opacity-60"
+        className="w-full rounded-xl py-2.5 text-sm font-medium text-white transition-all disabled:opacity-60 cursor-pointer"
         style={{ background: pending ? 'var(--neutral-400)' : 'var(--accent)' }}
       >
         {pending ? 'Saving...' : 'Save Changes'}
