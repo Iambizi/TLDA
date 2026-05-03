@@ -108,13 +108,26 @@ export function Section1Fields() {
         />
       </FieldWrapper>
 
-      <FieldWrapper label="What do you do for work?" error={errors.work?.message}>
+      <FieldWrapper label="What do you do for work?" error={errors.work?.message} required>
         <input
           id="field-work"
           type="text"
           placeholder="Your profession or industry"
           className="form-input"
           {...register('work')}
+        />
+      </FieldWrapper>
+
+      <FieldWrapper
+        label="Participant photo"
+        hint="Optional for now. Upload storage is part of the v3 database/storage migration."
+      >
+        <input
+          id="field-photo"
+          type="file"
+          accept="image/*"
+          className="form-input"
+          disabled
         />
       </FieldWrapper>
     </div>

@@ -82,7 +82,7 @@ export const Section1Schema = z.object({
     .min(18, 'Must be 18 or older')
     .max(120),
   birthday: z.string().min(1, 'Birthday is required'), // ISO date string
-  work: z.string().max(500).optional().default(''),
+  work: z.string().min(1, 'Work is required').max(500),
 })
 
 // ─── Section 2 — Ideal Partner ───────────────────────────────
@@ -92,7 +92,7 @@ export const Section2Schema = z.object({
   priority_weights: PriorityWeightsSchema,
 
   // Readiness
-  ready_for_love: ReadinessForLoveSchema,
+  ready_for_love: ReadinessForLoveSchema.optional().default('not_sure'),
   grand_amour: z.string().max(1000).optional().default(''),
 
   // Age range
@@ -100,31 +100,35 @@ export const Section2Schema = z.object({
     .number({ error: 'Must be a number' })
     .int()
     .min(18)
-    .max(120),
+    .max(120)
+    .optional()
+    .default(18),
   preferred_partner_age_max: z
     .number({ error: 'Must be a number' })
     .int()
     .min(18)
-    .max(120),
+    .max(120)
+    .optional()
+    .default(99),
   okay_with_some_deviation: z.boolean().default(false),
 
   // Lifestyle pairs — self
-  has_kids: LifestylePreferenceSchema,
-  travels_world: LifestylePreferenceSchema,
-  is_divorced: LifestylePreferenceSchema,
-  smokes_drug_friendly: LifestylePreferenceSchema,
-  has_tattoos: LifestylePreferenceSchema,
-  fitness_level: LifestylePreferenceSchema,
-  close_with_family: LifestylePreferenceSchema,
+  has_kids: LifestylePreferenceSchema.optional().default('flexible'),
+  travels_world: LifestylePreferenceSchema.optional().default('flexible'),
+  is_divorced: LifestylePreferenceSchema.optional().default('flexible'),
+  smokes_drug_friendly: LifestylePreferenceSchema.optional().default('flexible'),
+  has_tattoos: LifestylePreferenceSchema.optional().default('flexible'),
+  fitness_level: LifestylePreferenceSchema.optional().default('flexible'),
+  close_with_family: LifestylePreferenceSchema.optional().default('flexible'),
 
   // Lifestyle pairs — partner preference
-  partner_has_kids: LifestylePreferenceSchema,
-  partner_travels_world: LifestylePreferenceSchema,
-  partner_is_divorced: LifestylePreferenceSchema,
-  partner_smokes_drug_friendly: LifestylePreferenceSchema,
-  partner_has_tattoos: LifestylePreferenceSchema,
-  partner_fitness: LifestylePreferenceSchema,
-  partner_close_with_family: LifestylePreferenceSchema,
+  partner_has_kids: LifestylePreferenceSchema.optional().default('flexible'),
+  partner_travels_world: LifestylePreferenceSchema.optional().default('flexible'),
+  partner_is_divorced: LifestylePreferenceSchema.optional().default('flexible'),
+  partner_smokes_drug_friendly: LifestylePreferenceSchema.optional().default('flexible'),
+  partner_has_tattoos: LifestylePreferenceSchema.optional().default('flexible'),
+  partner_fitness: LifestylePreferenceSchema.optional().default('flexible'),
+  partner_close_with_family: LifestylePreferenceSchema.optional().default('flexible'),
 }).refine(
   (data) => data.preferred_partner_age_max >= data.preferred_partner_age_min,
   {

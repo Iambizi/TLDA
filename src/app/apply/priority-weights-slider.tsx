@@ -1,8 +1,5 @@
 'use client'
 
-import { useState } from 'react'
-import type { PriorityWeights } from '@/types'
-
 const CATEGORY_LABELS: Record<string, string> = {
   pedigree: 'Background / Pedigree',
   looks: 'Looks',
@@ -73,6 +70,18 @@ export function PriorityWeightsSlider({ value, onChange }: PriorityWeightsSlider
               onChange={(e) => handleChange(key, Number(e.target.value))}
               className="w-full h-2 rounded-full appearance-none cursor-pointer"
               style={{ accentColor: 'var(--accent)' }}
+            />
+            <input
+              id={`input-${key}`}
+              type="number"
+              min={0}
+              max={100}
+              step={1}
+              value={value[key]}
+              onChange={(e) => handleChange(key, Number(e.target.value))}
+              className="mt-2 w-24 rounded-lg border px-3 py-1.5 text-sm tabular-nums"
+              style={{ borderColor: 'var(--border)', color: 'var(--neutral-900)', background: 'white' }}
+              aria-label={`${CATEGORY_LABELS[key] ?? key} percentage`}
             />
           </div>
         ))}

@@ -3,9 +3,8 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { ReviewForm } from './review-form'
-import { InterviewLogger } from './interview-logger'
 import { DeleteParticipantCard } from './delete-participant-card'
-import { LIFESTYLE_ATTRIBUTES, LIFESTYLE_PREFERENCE_LABELS, READINESS_LABELS, INTERVIEW_OUTCOME_LABELS } from '@/lib/constants'
+import { LIFESTYLE_ATTRIBUTES, LIFESTYLE_PREFERENCE_LABELS, READINESS_LABELS } from '@/lib/constants'
 
 export const metadata: Metadata = { title: 'Participant Detail' }
 
@@ -65,12 +64,6 @@ export default async function ParticipantPage({ params }: ParticipantPageProps) 
     .eq('id', id)
     .single()
 
-  const { data: interviews } = await supabase
-    .from('interviews')
-    .select('*')
-    .eq('participant_id', id)
-    .order('created_at', { ascending: false })
-
   if (!participant) {
     notFound()
   }
@@ -114,6 +107,15 @@ export default async function ParticipantPage({ params }: ParticipantPageProps) 
             <p className="mt-1 text-sm" style={{ color: 'var(--muted)' }}>
               Applied on {submittedAt}
             </p>
+            <div className="mt-5 flex items-center gap-4 rounded-xl border p-4" style={{ borderColor: 'var(--border)', background: 'var(--neutral-50)' }}>
+              <div className="flex h-16 w-16 items-center justify-center rounded-full text-xl font-semibold" style={{ background: 'var(--neutral-200)', color: 'var(--neutral-600)' }}>
+                {String(participant.full_name || '?').slice(0, 1).toUpperCase()}
+              </div>
+              <div>
+                <p className="text-sm font-medium" style={{ color: 'var(--neutral-900)' }}>Participant photo</p>
+                <p className="text-xs" style={{ color: 'var(--muted)' }}>Photo display will use `participants.photo_url` after the v3 storage migration.</p>
+              </div>
+            </div>
           </div>
 
           <SectionHeading title="Section 1 — Basic Info" />
@@ -198,6 +200,13 @@ export default async function ParticipantPage({ params }: ParticipantPageProps) 
         {/* Right Column: Sidebar */}
         <div className="w-full lg:w-80 shrink-0 flex flex-col gap-6">
           <div className="rounded-2xl border p-6 shadow-sm bg-white" style={{ borderColor: 'var(--border)' }}>
+            <Link
+              href={`/participants/${participant.id}/edit`}
+              className="mb-4 block w-full rounded-xl px-4 py-2.5 text-center text-sm font-medium text-white"
+              style={{ background: 'var(--neutral-900)' }}
+            >
+              Edit Profile
+            </Link>
             <h3 className="text-lg font-semibold mb-4" style={{ color: 'var(--neutral-900)' }}>
               Review Actions
             </h3>
@@ -207,35 +216,6 @@ export default async function ParticipantPage({ params }: ParticipantPageProps) 
               initialStatus={application.status}
               initialNotes={application.organizer_notes}
             />
-          </div>
-
-          <div className="rounded-2xl border p-6 shadow-sm bg-white" style={{ borderColor: 'var(--border)' }}>
-            <h3 className="text-lg font-semibold mb-4" style={{ color: 'var(--neutral-900)' }}>
-              Interviews
-            </h3>
-            
-            {(interviews || []).map((iv: any) => (
-              <div key={iv.id} className="mb-4 pb-4 border-b last:border-0 last:mb-0 last:pb-0" style={{ borderColor: 'var(--border)' }}>
-                <p className="text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: 'var(--accent)' }}>
-                  {INTERVIEW_OUTCOME_LABELS[iv.outcome as keyof typeof INTERVIEW_OUTCOME_LABELS] || iv.outcome}
-                </p>
-                {iv.scheduled_at && (
-                  <p className="text-sm mb-1" style={{ color: 'var(--neutral-600)' }}>
-                    {new Date(iv.scheduled_at).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' })}
-                  </p>
-                )}
-                {iv.notes && (
-                  <p className="text-sm mt-2 p-3 bg-neutral-50 rounded-lg whitespace-pre-wrap" style={{ color: 'var(--neutral-800)' }}>
-                    {iv.notes}
-                  </p>
-                )}
-              </div>
-            ))}
-
-            <div className="mt-4 pt-4 border-t" style={{ borderColor: 'var(--border)' }}>
-              <p className="text-xs font-medium uppercase tracking-wider mb-4" style={{ color: 'var(--muted)' }}>Log New Interview</p>
-              <InterviewLogger participantId={participant.id} applicationId={application.id} />
-            </div>
           </div>
 
           <DeleteParticipantCard

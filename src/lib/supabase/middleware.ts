@@ -27,11 +27,14 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  // Protect all /dashboard, /participants, /events routes
+  // Protect organizer-only routes
   const isProtectedRoute =
     request.nextUrl.pathname.startsWith('/dashboard') ||
     request.nextUrl.pathname.startsWith('/participants') ||
-    request.nextUrl.pathname.startsWith('/events')
+    request.nextUrl.pathname.startsWith('/events') ||
+    request.nextUrl.pathname.startsWith('/matches') ||
+    request.nextUrl.pathname.startsWith('/operations') ||
+    request.nextUrl.pathname.startsWith('/settings')
 
   if (isProtectedRoute && !user) {
     const url = request.nextUrl.clone()

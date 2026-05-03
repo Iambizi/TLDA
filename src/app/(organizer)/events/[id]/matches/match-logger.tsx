@@ -2,29 +2,50 @@
 
 import { useActionState } from 'react'
 import { logMatchOutcome } from '@/app/actions/matches'
-import { INTEREST_STATUS_LABELS } from '@/lib/constants'
 
 interface MatchLoggerProps {
   eventId: string
-  attendedParticipants: { id: string; full_name: string }[]
+  participants: { id: string; full_name: string }[]
 }
 
-export function MatchLogger({ eventId, attendedParticipants }: MatchLoggerProps) {
+const connectionStatuses = [
+  { value: 'connected', label: 'Connected' },
+  { value: 'exchanged_contacts', label: 'Exchanged Contacts' },
+  { value: 'went_on_date', label: 'Went on a Date' },
+  { value: 'in_relationship', label: 'In a Relationship' },
+  { value: 'no_follow_up', label: 'No Follow-Up' },
+]
+
+export function MatchLogger({ eventId, participants }: MatchLoggerProps) {
   const [state, action, pending] = useActionState(logMatchOutcome, undefined)
 
-  if (attendedParticipants.length < 2) {
+  if (participants.length < 2) {
     return (
       <div className="p-6 text-sm text-center" style={{ color: 'var(--muted)', background: 'var(--neutral-50)', borderRadius: '1rem', border: '1px solid var(--border)' }}>
-        Not enough attendees logged yet to record matches. Update the event roster attendance statuses to 'Attended'.
+        Add at least two participants to the event roster to start preliminary matching.
       </div>
     )
   }
 
   return (
     <form action={action} className="flex flex-col gap-4 p-6" style={{ background: 'var(--neutral-50)', borderRadius: '1rem', border: '1px solid var(--border)' }}>
-      <h3 className="text-sm font-semibold" style={{ color: 'var(--neutral-900)' }}>
-        Log New Match
-      </h3>
+      <div>
+        <div className="flex items-center gap-2">
+          <h3 className="text-sm font-semibold" style={{ color: 'var(--neutral-900)' }}>
+            Preliminary Match
+          </h3>
+          <span
+            title="Use this before or after an event to track pairings and follow-up outcomes."
+            className="inline-flex h-5 w-5 items-center justify-center rounded-full text-xs font-semibold"
+            style={{ background: 'var(--neutral-200)', color: 'var(--neutral-600)' }}
+          >
+            i
+          </span>
+        </div>
+        <p className="mt-1 text-xs" style={{ color: 'var(--muted)' }}>
+          Select two roster participants and track the outcome.
+        </p>
+      </div>
       
       {state && 'error' in state && (
         <div className="rounded-lg px-3 py-2 text-xs" style={{ background: '#fef2f2', color: '#b91c1c', border: '1px solid #fecaca' }}>
@@ -52,7 +73,7 @@ export function MatchLogger({ eventId, attendedParticipants }: MatchLoggerProps)
             defaultValue=""
           >
             <option value="" disabled>Select participant...</option>
-            {attendedParticipants.map(p => (
+            {participants.map(p => (
               <option key={p.id} value={p.id}>{p.full_name}</option>
             ))}
           </select>
@@ -70,7 +91,7 @@ export function MatchLogger({ eventId, attendedParticipants }: MatchLoggerProps)
             defaultValue=""
           >
             <option value="" disabled>Select participant...</option>
-            {attendedParticipants.map(p => (
+            {participants.map(p => (
               <option key={p.id} value={p.id}>{p.full_name}</option>
             ))}
           </select>
@@ -78,20 +99,32 @@ export function MatchLogger({ eventId, attendedParticipants }: MatchLoggerProps)
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <label htmlFor="interest_status" className="text-xs font-medium" style={{ color: 'var(--neutral-700)' }}>
-          Interest Level
+        <label htmlFor="connection_status" className="text-xs font-medium" style={{ color: 'var(--neutral-700)' }}>
+          Status
         </label>
         <select
-          name="interest_status"
-          id="interest_status"
+          name="connection_status"
+          id="connection_status"
           required
           className="form-input text-sm w-full cursor-pointer"
-          defaultValue="mutual_interest"
+          defaultValue="connected"
         >
-          {Object.entries(INTEREST_STATUS_LABELS).map(([value, label]) => (
-            <option key={value} value={value}>{label}</option>
+          {connectionStatuses.map((status) => (
+            <option key={status.value} value={status.value}>{status.label}</option>
           ))}
         </select>
+      </div>
+
+      <div className="flex flex-col gap-1.5">
+        <label htmlFor="follow_up_date" className="text-xs font-medium" style={{ color: 'var(--neutral-700)' }}>
+          Follow-Up Date
+        </label>
+        <input
+          name="follow_up_date"
+          id="follow_up_date"
+          type="date"
+          className="form-input text-sm w-full"
+        />
       </div>
 
       <div className="flex flex-col gap-1.5">
@@ -113,7 +146,7 @@ export function MatchLogger({ eventId, attendedParticipants }: MatchLoggerProps)
         className="w-full rounded-xl py-2 text-sm font-medium text-white transition-all disabled:opacity-60 mt-2"
         style={{ background: pending ? 'var(--neutral-400)' : 'var(--neutral-900)' }}
       >
-        {pending ? 'Saving...' : 'Log Match Outcome'}
+        {pending ? 'Saving...' : 'Save Match'}
       </button>
     </form>
   )

@@ -36,20 +36,12 @@ export default async function DashboardPage() {
   const supabase = await createClient()
 
   // 1. Fetch metrics in parallel
-  const weekAgo = new Date()
-  weekAgo.setDate(weekAgo.getDate() - 7)
-  const weekAgoIso = weekAgo.toISOString()
-
   const [
-    { count: totalApplicants },
-    { count: pendingReview },
-    { count: newThisWeek },
-    { count: upcomingEvents },
+    { count: totalMatches },
+    { count: contactsExchanged },
   ] = await Promise.all([
-    supabase.from('applications').select('*', { count: 'exact', head: true }),
-    supabase.from('applications').select('*', { count: 'exact', head: true }).in('status', ['applied', 'under_review']),
-    supabase.from('applications').select('*', { count: 'exact', head: true }).gte('submitted_at', weekAgoIso),
-    supabase.from('events').select('*', { count: 'exact', head: true }).in('status', ['open', 'draft']),
+    supabase.from('match_outcomes').select('*', { count: 'exact', head: true }),
+    supabase.from('match_outcomes').select('*', { count: 'exact', head: true }).eq('interest_status', 'introduced_off_platform'),
   ])
 
   // 2. Fetch recent applications with participant info
@@ -96,12 +88,11 @@ export default async function DashboardPage() {
       </div>
 
       {/* Metrics */}
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4 mb-10">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3 mb-10">
         {[
-          { label: 'Total Applicants', value: totalApplicants ?? 0 },
-          { label: 'Pending Review', value: pendingReview ?? 0 },
-          { label: 'New This Week', value: newThisWeek ?? 0 },
-          { label: 'Upcoming Events', value: upcomingEvents ?? 0 },
+          { label: 'Total Matches Made', value: totalMatches ?? 0 },
+          { label: 'Contacts Exchanged', value: contactsExchanged ?? 0 },
+          { label: 'Revenue vs. Cost', value: '$0 net', note: 'Connects after operations schema migration' },
         ].map((stat) => (
           <div
             key={stat.label}
@@ -114,6 +105,9 @@ export default async function DashboardPage() {
             <p className="mt-2 text-3xl font-semibold" style={{ color: 'var(--neutral-900)' }}>
               {stat.value}
             </p>
+            {'note' in stat && (
+              <p className="mt-2 text-xs" style={{ color: 'var(--muted)' }}>{stat.note}</p>
+            )}
           </div>
         ))}
       </div>

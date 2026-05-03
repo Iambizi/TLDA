@@ -5,7 +5,7 @@ import { useForm, FormProvider, type FieldValues } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useActionState, startTransition } from 'react'
 import { ApplicationFormSchema } from '@/lib/schemas'
-import { DEFAULT_PRIORITY_WEIGHTS, LIFESTYLE_ATTRIBUTES } from '@/lib/constants'
+import { DEFAULT_PRIORITY_WEIGHTS } from '@/lib/constants'
 import {
   submitApplication,
   type ApplicationSubmissionState,
@@ -16,16 +16,11 @@ import { Section3Fields } from '@/app/apply/section-3-fields'
 
 const SECTIONS = [
   { number: 1, label: 'Basic Info' },
-  { number: 2, label: 'Ideal Partner' },
-  { number: 3, label: 'About You' },
+  { number: 2, label: 'About You' },
+  { number: 3, label: 'Ideal Partner' },
 ]
 
 const SECTION_1_KEYS = ['full_name', 'contact_info', 'gender', 'age', 'birthday', 'work']
-const SECTION_2_KEYS = [
-  'priority_weights', 'ready_for_love', 'preferred_partner_age_min',
-  'preferred_partner_age_max', 'okay_with_some_deviation',
-  ...LIFESTYLE_ATTRIBUTES.flatMap((a) => [a.self, a.partner]),
-]
 
 type ApplicationFormAction = (
   prevState: ApplicationSubmissionState,
@@ -46,6 +41,7 @@ export function ApplicationFormClient({
   footerNote = 'Your information is private and will only be seen by the organizer.',
 }: ApplicationFormClientProps) {
   const [step, setStep] = useState(1)
+  const [draftSaved, setDraftSaved] = useState(false)
   const [submitState, submitAction, pending] = useActionState(submissionAction, undefined)
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -79,8 +75,7 @@ export function ApplicationFormClient({
   const { handleSubmit, trigger } = methods
 
   async function goNext() {
-    const keys = step === 1 ? SECTION_1_KEYS : SECTION_2_KEYS
-    const valid = await trigger(keys)
+    const valid = step === 1 ? await trigger(SECTION_1_KEYS) : true
     if (valid) setStep((s) => s + 1)
   }
 
@@ -104,6 +99,12 @@ export function ApplicationFormClient({
         submitAction(fd)
       })
     })(e)
+  }
+
+  function saveDraft() {
+    const values = methods.getValues()
+    window.localStorage.setItem('group-date-application-draft', JSON.stringify(values))
+    setDraftSaved(true)
   }
 
   return (
@@ -146,8 +147,8 @@ export function ApplicationFormClient({
       >
         <form onSubmit={onSubmitHandler} id="application-form">
           {step === 1 && <Section1Fields />}
-          {step === 2 && <Section2Fields />}
-          {step === 3 && <Section3Fields />}
+          {step === 2 && <Section3Fields sectionNumber={2} />}
+          {step === 3 && <Section2Fields sectionNumber={3} />}
 
           {/* Global submit error */}
           {submitState && 'error' in submitState && (
@@ -177,31 +178,61 @@ export function ApplicationFormClient({
             )}
 
             {step < 3 ? (
-              <button
-                key="next-button"
-                type="button"
-                onClick={goNext}
-                className="px-6 py-2.5 rounded-xl text-sm font-medium text-white transition-all cursor-pointer"
-                style={{ background: 'var(--accent)' }}
-                id="form-next"
-              >
-                Next →
-              </button>
+              <div className="flex items-center gap-3">
+                <button
+                  key="draft-button"
+                  type="button"
+                  onClick={saveDraft}
+                  className="px-5 py-2.5 rounded-xl text-sm font-medium border transition-all cursor-pointer"
+                  style={{ borderColor: 'var(--border)', color: 'var(--neutral-600)' }}
+                  id="form-save-draft"
+                >
+                  Save Draft
+                </button>
+                <button
+                  key="next-button"
+                  type="button"
+                  onClick={goNext}
+                  className="px-6 py-2.5 rounded-xl text-sm font-medium text-white transition-all cursor-pointer"
+                  style={{ background: 'var(--accent)' }}
+                  id="form-next"
+                >
+                  Next →
+                </button>
+              </div>
             ) : (
-              <button
-                key="submit-button"
-                type="submit"
-                disabled={pending}
-                className="px-6 py-2.5 rounded-xl text-sm font-medium text-white transition-all disabled:opacity-60 cursor-pointer disabled:cursor-not-allowed"
-                style={{ background: pending ? 'var(--neutral-400)' : 'var(--accent)' }}
-                id="form-submit"
-              >
-                {pending ? pendingLabel : submitLabel}
-              </button>
+              <div className="flex items-center gap-3">
+                <button
+                  key="draft-button-final"
+                  type="button"
+                  onClick={saveDraft}
+                  className="px-5 py-2.5 rounded-xl text-sm font-medium border transition-all cursor-pointer"
+                  style={{ borderColor: 'var(--border)', color: 'var(--neutral-600)' }}
+                  id="form-save-draft"
+                >
+                  Save Draft
+                </button>
+                <button
+                  key="submit-button"
+                  type="submit"
+                  disabled={pending}
+                  className="px-6 py-2.5 rounded-xl text-sm font-medium text-white transition-all disabled:opacity-60 cursor-pointer disabled:cursor-not-allowed"
+                  style={{ background: pending ? 'var(--neutral-400)' : 'var(--accent)' }}
+                  id="form-submit"
+                >
+                  {pending ? pendingLabel : submitLabel}
+                </button>
+              </div>
             )}
           </div>
         </form>
       </div>
+
+      {draftSaved && (
+        <p className="text-center text-xs mt-4" style={{ color: 'var(--accent)' }}>
+          Draft saved in this browser. Database-backed draft profiles will be enabled after the v3 schema migration.
+        </p>
+      )}
 
       <p className="text-center text-xs mt-4" style={{ color: 'var(--muted)' }}>
         {footerNote}

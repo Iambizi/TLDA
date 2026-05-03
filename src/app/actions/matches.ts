@@ -13,12 +13,30 @@ export async function logMatchOutcome(
   _prevState: MatchState,
   formData: FormData
 ): Promise<MatchState> {
+  const connectionStatus = String(formData.get('connection_status') || 'connected')
+  const followUpDate = String(formData.get('follow_up_date') || '')
+  const notes = String(formData.get('organizer_notes') || '').trim()
+
+  const statusMap: Record<string, string> = {
+    connected: 'potential_match',
+    exchanged_contacts: 'introduced_off_platform',
+    went_on_date: 'mutual_interest',
+    in_relationship: 'mutual_interest',
+    no_follow_up: 'no_match',
+  }
+
+  const noteParts = [
+    notes,
+    `Connection status: ${connectionStatus.replaceAll('_', ' ')}`,
+    followUpDate ? `Follow-up date: ${followUpDate}` : '',
+  ].filter(Boolean)
+
   const rawData = {
     event_id: formData.get('event_id'),
     participant_a_id: formData.get('participant_a_id'),
     participant_b_id: formData.get('participant_b_id'),
-    interest_status: formData.get('interest_status') || 'potential_match',
-    organizer_notes: formData.get('organizer_notes') || undefined,
+    interest_status: statusMap[connectionStatus] || formData.get('interest_status') || 'potential_match',
+    organizer_notes: noteParts.join('\n') || undefined,
   }
 
   const parsed = CreateMatchOutcomeSchema.safeParse(rawData)

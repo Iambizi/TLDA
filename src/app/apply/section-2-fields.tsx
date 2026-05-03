@@ -9,14 +9,14 @@ import type { LifestylePreference, ReadinessForLove } from '@/types'
 
 const LIFESTYLE_OPTIONS: LifestylePreference[] = ['want', 'dont_want', 'flexible']
 
-export function Section2Fields() {
+export function Section2Fields({ sectionNumber = 2 }: { sectionNumber?: number }) {
   const { register, control, formState: { errors } } = useFormContext<ApplicationFormValues>()
 
   return (
     <div className="flex flex-col gap-8">
       <div>
         <h2 className="text-lg font-semibold mb-1" style={{ color: 'var(--neutral-900)' }}>
-          Section 2 — Ideal Partner
+          Section {sectionNumber} — Ideal Partner
         </h2>
         <p className="text-sm" style={{ color: 'var(--muted)' }}>
           Help us understand what you&apos;re looking for.
@@ -29,7 +29,7 @@ export function Section2Fields() {
           What matters most to you in a partner?
         </p>
         <p className="text-xs mb-4" style={{ color: 'var(--muted)' }}>
-          Drag the sliders — they&apos;ll auto-balance to 100%.
+          Drag the sliders or enter percentages manually — they&apos;ll auto-balance to 100%.
         </p>
         <Controller
           name="priority_weights"
@@ -46,7 +46,7 @@ export function Section2Fields() {
       </div>
 
       {/* Readiness */}
-      <FieldWrapper label="Are you ready for a relationship?" error={errors.ready_for_love?.message} required>
+      <FieldWrapper label="Are you ready for a relationship?" error={errors.ready_for_love?.message}>
         <select
           id="field-ready-for-love"
           className="form-input"
@@ -75,7 +75,7 @@ export function Section2Fields() {
           Preferred partner age range
         </p>
         <div className="grid grid-cols-2 gap-4">
-          <FieldWrapper label="Minimum age" error={errors.preferred_partner_age_min?.message} required>
+          <FieldWrapper label="Minimum age" error={errors.preferred_partner_age_min?.message}>
             <input
               id="field-age-min"
               type="number"
@@ -86,7 +86,7 @@ export function Section2Fields() {
               {...register('preferred_partner_age_min', { valueAsNumber: true })}
             />
           </FieldWrapper>
-          <FieldWrapper label="Maximum age" error={errors.preferred_partner_age_max?.message} required>
+          <FieldWrapper label="Maximum age" error={errors.preferred_partner_age_max?.message}>
             <input
               id="field-age-max"
               type="number"
@@ -134,7 +134,7 @@ export function Section2Fields() {
                 {/* Self */}
                 <div>
                   <p className="text-xs mb-2 font-medium" style={{ color: errors[attr.self] ? '#b91c1c' : 'var(--muted)' }}>
-                    About you {errors[attr.self] && <span className="font-normal">— Required</span>}
+                    About you {errors[attr.self] && <span className="font-normal">— Check value</span>}
                   </p>
                   <div className="flex gap-2 flex-wrap">
                     {(('isBinary' in attr && attr.isBinary) ? LIFESTYLE_OPTIONS.filter((o) => o !== 'flexible') : LIFESTYLE_OPTIONS).map((opt) => (
@@ -156,7 +156,7 @@ export function Section2Fields() {
                 {/* Partner */}
                 <div>
                   <p className="text-xs mb-2 font-medium" style={{ color: errors[attr.partner] ? '#b91c1c' : 'var(--muted)' }}>
-                    In a partner {errors[attr.partner] && <span className="font-normal">— Required</span>}
+                    In a partner {errors[attr.partner] && <span className="font-normal">— Check value</span>}
                   </p>
                   <div className="flex gap-2 flex-wrap">
                     {LIFESTYLE_OPTIONS.map((opt) => (

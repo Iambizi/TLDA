@@ -49,7 +49,7 @@ export default async function MatchesPage({ params }: MatchesPageProps) {
     participant_b: { id: mo.participant_b.id, name: mo.participant_b.full_name },
   }))
 
-  // 3. Fetch attended participants for the logger dropdowns
+  // 3. Fetch roster participants for preliminary matching
   const { data: attendeesRaw } = await supabase
     .from('event_participants')
     .select(`
@@ -57,7 +57,6 @@ export default async function MatchesPage({ params }: MatchesPageProps) {
       participants(id, full_name)
     `)
     .eq('event_id', id)
-    .eq('attendance_status', 'attended')
 
   const attendedParticipants = (attendeesRaw || []).map((ap: any) => ({
     id: ap.participants.id,
@@ -81,11 +80,20 @@ export default async function MatchesPage({ params }: MatchesPageProps) {
         {/* Left Column: Logged Matches */}
         <div className="flex-1">
           <div className="mb-8">
-            <h1 className="text-3xl font-semibold mb-2" style={{ color: 'var(--neutral-900)' }}>
-              Match Outcomes
-            </h1>
+            <div className="flex items-center gap-2">
+              <h1 className="text-3xl font-semibold" style={{ color: 'var(--neutral-900)' }}>
+                Preliminary Matching
+              </h1>
+              <span
+                title="Use this page to plan pairings before the event and update outcomes after follow-up."
+                className="inline-flex h-5 w-5 items-center justify-center rounded-full text-xs font-semibold"
+                style={{ background: 'var(--neutral-200)', color: 'var(--neutral-600)' }}
+              >
+                i
+              </span>
+            </div>
             <p className="text-sm" style={{ color: 'var(--muted)' }}>
-              Post-event tracker for {event.title}
+              Pairing and outcome tracker for {event.title}
             </p>
           </div>
 
@@ -101,7 +109,7 @@ export default async function MatchesPage({ params }: MatchesPageProps) {
                     <tr>
                       <th className="px-6 py-4 font-medium">Participant A</th>
                       <th className="px-6 py-4 font-medium">Participant B</th>
-                      <th className="px-6 py-4 font-medium">Interest Level</th>
+                      <th className="px-6 py-4 font-medium">Status</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y" style={{ borderColor: 'var(--border)' }}>
@@ -138,10 +146,10 @@ export default async function MatchesPage({ params }: MatchesPageProps) {
           </div>
         </div>
 
-        {/* Right Column: Assigner */}
+        {/* Right Column: Matcher */}
         <div className="w-full lg:w-80 shrink-0">
           <div className="sticky top-8">
-            <MatchLogger eventId={event.id} attendedParticipants={attendedParticipants} />
+            <MatchLogger eventId={event.id} participants={attendedParticipants} />
           </div>
         </div>
 

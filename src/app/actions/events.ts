@@ -68,6 +68,59 @@ export async function createEvent(
   redirect(`/events/${newEvent.id}`)
 }
 
+export async function updateEvent(
+  eventId: string,
+  formData: FormData
+): Promise<void> {
+  const optionalString = (key: string) => {
+    const value = formData.get(key)
+    return typeof value === 'string' && value.trim() !== '' ? value : undefined
+  }
+
+  const rawData = {
+    title: formData.get('title'),
+    event_date: optionalString('event_date'),
+    location: optionalString('location'),
+    description: optionalString('description'),
+    status: formData.get('status') || 'draft',
+    notes: optionalString('notes'),
+  }
+
+  const parsed = CreateEventSchema.safeParse(rawData)
+
+  if (!parsed.success) {
+    const firstError = parsed.error.issues[0]
+    throw new Error(firstError?.message ?? 'Invalid event data provided.')
+  }
+
+  const data = parsed.data
+  const supabase = await createClient() as any
+  const isoDate = data.event_date ? new Date(data.event_date).toISOString() : null
+
+  const { error } = await supabase
+    .from('events')
+    .update({
+      title: data.title,
+      event_date: isoDate,
+      location: data.location || null,
+      description: data.description || null,
+      status: data.status,
+      notes: data.notes || null,
+    })
+    .eq('id', eventId)
+
+  if (error) {
+    console.error('Error updating event:', error)
+    throw new Error('Failed to update event. Please try again.')
+  }
+
+  revalidatePath('/dashboard')
+  revalidatePath('/events')
+  revalidatePath(`/events/${eventId}`)
+
+  redirect(`/events/${eventId}`)
+}
+
 export type AssignState = { error: string } | { success: true } | undefined
 
 async function syncApplicationAssignmentState(params: {
@@ -164,14 +217,8 @@ export async function assignParticipantToEvent(
     return { error: 'Failed to assign participant.' }
   }
 
-  // 3. Update global application status to 'assigned_to_event'
-  await syncApplicationAssignmentState({
-    supabase,
-    applicationId,
-    participantId,
-    eventId,
-    mode: 'assign',
-  })
+  // v3 supports multi-event assignment. The roster join table is the source of
+  // truth, so we do not overwrite a single global assigned_event_id here.
 
   revalidatePath(`/events/${eventId}`)
   revalidatePath(`/participants`)
@@ -209,13 +256,7 @@ export async function removeParticipantFromEvent(
     return { error: 'Failed to remove participant.' }
   }
 
-  await syncApplicationAssignmentState({
-    supabase,
-    applicationId: rosterRow?.application_id ?? null,
-    participantId,
-    eventId,
-    mode: 'remove',
-  })
+  void rosterRow
 
   revalidatePath(`/events/${eventId}`)
   revalidatePath(`/participants`)

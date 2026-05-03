@@ -8,14 +8,14 @@ import { FieldWrapper } from '@/app/apply/field-wrapper'
 // It is presented to the participant as "Values & Worldview" — a neutral, open-ended prompt.
 // The field key is never exposed as a visible label in any UI.
 
-export function Section3Fields() {
+export function Section3Fields({ sectionNumber = 3 }: { sectionNumber?: number }) {
   const { register, formState: { errors } } = useFormContext<ApplicationFormValues>()
 
   return (
     <div className="flex flex-col gap-6">
       <div>
         <h2 className="text-lg font-semibold mb-1" style={{ color: 'var(--neutral-900)' }}>
-          Section 3 — About You
+          Section {sectionNumber} — About You
         </h2>
         <p className="text-sm" style={{ color: 'var(--muted)' }}>
           The fun part. Answer as much or as little as you like.

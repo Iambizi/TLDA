@@ -8,6 +8,9 @@ const NAV_ITEMS = [
   { href: '/dashboard', label: 'Dashboard', icon: '◈' },
   { href: '/participants', label: 'Participants', icon: '◉' },
   { href: '/events', label: 'Events', icon: '◆' },
+  { href: '/matches', label: 'Matches', icon: '◇' },
+  { href: '/operations', label: 'Operations', icon: '◍' },
+  { href: '/settings/questionnaire', label: 'Questionnaire', icon: '◌' },
 ]
 
 interface OrganizerNavProps {

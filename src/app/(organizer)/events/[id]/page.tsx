@@ -57,7 +57,8 @@ export default async function EventPage({ params }: EventPageProps) {
 
   const rosterParticipantIds = roster.map((r: any) => r.participant_id)
 
-  // 3. Fetch approved applicants not already on the roster
+  // 3. Fetch assignable applicants not already on this event roster.
+  // v3 allows multi-event assignment, so participants assigned elsewhere remain available here.
   const { data: approvedApps } = await supabase
     .from('applications')
     .select(`
@@ -70,7 +71,7 @@ export default async function EventPage({ params }: EventPageProps) {
         gender
       )
     `)
-    .eq('status', 'approved')
+    .in('status', ['approved', 'assigned_to_event'])
 
   const availableParticipants = (approvedApps || [])
     .filter((app: any) => app.participant_id && !rosterParticipantIds.includes(app.participant_id))
@@ -103,6 +104,13 @@ export default async function EventPage({ params }: EventPageProps) {
           style={{ background: 'var(--neutral-900)', color: 'white' }}
         >
           View Matches
+        </Link>
+        <Link
+          href={`/events/${id}/edit`}
+          className="rounded-xl border px-4 py-2 text-sm font-medium transition-all shadow-sm"
+          style={{ borderColor: 'var(--border)', color: 'var(--neutral-700)', background: 'white' }}
+        >
+          Edit Event
         </Link>
       </div>
 
@@ -148,6 +156,34 @@ export default async function EventPage({ params }: EventPageProps) {
                 <p className="text-sm text-amber-900 whitespace-pre-wrap">{event.notes}</p>
               </div>
             )}
+          </div>
+
+          <div className="rounded-2xl border p-6 shadow-sm mb-8" style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
+            <div className="mb-4 flex items-center gap-2">
+              <h2 className="text-xl font-semibold" style={{ color: 'var(--neutral-900)' }}>Operations</h2>
+              <span
+                title="Track line-item costs and participant payments here after the v3 operations schema migration."
+                className="inline-flex h-5 w-5 items-center justify-center rounded-full text-xs font-semibold"
+                style={{ background: 'var(--neutral-200)', color: 'var(--neutral-600)' }}
+              >
+                i
+              </span>
+            </div>
+            <div className="grid grid-cols-3 gap-4">
+              {[
+                { label: 'Revenue', value: '$0' },
+                { label: 'Costs', value: '$0' },
+                { label: 'Net', value: '$0' },
+              ].map((metric) => (
+                <div key={metric.label} className="rounded-xl border p-4" style={{ borderColor: 'var(--border)', background: 'var(--neutral-50)' }}>
+                  <p className="text-xs font-medium uppercase tracking-wider" style={{ color: 'var(--muted)' }}>{metric.label}</p>
+                  <p className="mt-1 text-xl font-semibold" style={{ color: 'var(--neutral-900)' }}>{metric.value}</p>
+                </div>
+              ))}
+            </div>
+            <p className="mt-4 text-xs" style={{ color: 'var(--muted)' }}>
+              Line-item expenses and participant payments require `event_expenses` and `payment_amount` from the v3 database plan.
+            </p>
           </div>
 
           <h2 className="text-xl font-semibold mb-4" style={{ color: 'var(--neutral-900)' }}>
