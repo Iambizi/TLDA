@@ -5,12 +5,12 @@ import { usePathname } from 'next/navigation'
 import { logout } from '@/app/actions/auth'
 
 const NAV_ITEMS = [
-  { href: '/dashboard', label: 'Dashboard', icon: '◈' },
-  { href: '/participants', label: 'Participants', icon: '◉' },
-  { href: '/events', label: 'Events', icon: '◆' },
-  { href: '/matches', label: 'Matches', icon: '◇' },
-  { href: '/operations', label: 'Operations', icon: '◍' },
-  { href: '/settings/questionnaire', label: 'Questionnaire', icon: '◌' },
+  { href: '/dashboard', label: 'Dashboard', icon: '📊' },
+  { href: '/participants', label: 'Participants', icon: '👥' },
+  { href: '/events', label: 'Events', icon: '🎟️' },
+  { href: '/matches', label: 'Matches', icon: '💞' },
+  { href: '/operations', label: 'Operations', icon: '💰' },
+  { href: '/settings/questionnaire', label: 'Questionnaire', icon: '📝' },
 ]
 
 interface OrganizerNavProps {
@@ -51,7 +51,7 @@ export function OrganizerNav({ userEmail }: OrganizerNavProps) {
                 background: isActive ? 'var(--brand-50)' : 'transparent',
               }}
             >
-              <span className="text-base">{item.icon}</span>
+              <span className="w-5 text-center text-base" aria-hidden="true">{item.icon}</span>
               {item.label}
             </Link>
           )
@@ -73,7 +73,7 @@ export function OrganizerNav({ userEmail }: OrganizerNavProps) {
             className="w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all"
             style={{ color: 'var(--neutral-500)' }}
           >
-            <span className="text-base">→</span>
+            <span className="w-5 text-center text-base" aria-hidden="true">🚪</span>
             Sign out
           </button>
         </form>
