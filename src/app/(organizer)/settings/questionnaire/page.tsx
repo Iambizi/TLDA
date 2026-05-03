@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import Link from 'next/link'
 
 export const metadata: Metadata = { title: 'Questionnaire Builder' }
 
@@ -6,16 +7,19 @@ const sections = [
   {
     title: 'Basic Info',
     description: 'Permanent required identity and contact fields.',
+    required: 'All fields required',
     questions: ['Full name', 'Best way to reach you', 'Gender', 'Birthday', 'Age', 'Work'],
   },
   {
     title: 'About You',
     description: 'Optional prompts Liela can tune between events.',
+    required: 'All fields optional',
     questions: ['Dream city', 'Ask-out preference', 'Life in 5 years', 'Dream date', 'Dealbreaker', 'Values & Worldview'],
   },
   {
     title: 'Ideal Partner',
     description: 'Partner preference prompts, with Venn weights kept required.',
+    required: 'Priority weights required',
     questions: ['Priority weights', 'Ready for love', 'Preferred partner age range', 'Lifestyle preferences'],
   },
 ]
@@ -37,8 +41,70 @@ export default function QuestionnaireBuilderPage() {
           </span>
         </div>
         <p className="mt-1 text-sm" style={{ color: 'var(--muted)' }}>
-          Manage the intake questionnaire structure for future events.
+          Review the questionnaire currently live on `/apply`, then manage future question sets after the v3 schema migration.
         </p>
+      </div>
+
+      <section className="mb-8 rounded-2xl border p-6 shadow-sm" style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
+        <div className="mb-5 flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+          <div>
+            <div className="mb-2 flex items-center gap-2">
+              <span className="rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wider" style={{ background: '#ecfdf5', color: '#047857' }}>
+                Live on /apply
+              </span>
+              <span className="text-xs" style={{ color: 'var(--muted)' }}>
+                Current hardcoded v3 intake
+              </span>
+            </div>
+            <h2 className="text-xl font-semibold" style={{ color: 'var(--neutral-900)' }}>
+              Current Live Questionnaire
+            </h2>
+            <p className="mt-1 text-sm" style={{ color: 'var(--muted)' }}>
+              This is the exact section order applicants and organizers see in the intake flow today.
+            </p>
+          </div>
+          <Link
+            href="/apply"
+            className="rounded-xl px-4 py-2 text-sm font-medium text-white"
+            style={{ background: 'var(--neutral-900)' }}
+          >
+            Preview /apply
+          </Link>
+        </div>
+
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+          {sections.map((section, index) => (
+            <div key={section.title} className="rounded-xl border p-4" style={{ borderColor: 'var(--border)', background: 'var(--neutral-50)' }}>
+              <div className="mb-3 flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <span className="flex h-8 w-8 items-center justify-center rounded-full text-sm font-semibold" style={{ background: 'var(--accent)', color: 'white' }}>
+                    {index + 1}
+                  </span>
+                  <h3 className="font-semibold" style={{ color: 'var(--neutral-900)' }}>{section.title}</h3>
+                </div>
+              </div>
+              <p className="mb-3 text-xs font-medium" style={{ color: 'var(--accent)' }}>{section.required}</p>
+              <ul className="space-y-1.5">
+                {section.questions.map((question) => (
+                  <li key={question} className="text-sm" style={{ color: 'var(--neutral-700)' }}>
+                    {question}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <div className="mb-4 flex items-center justify-between">
+        <div>
+          <h2 className="text-lg font-semibold" style={{ color: 'var(--neutral-900)' }}>
+            Future Editable Builder
+          </h2>
+          <p className="mt-1 text-sm" style={{ color: 'var(--muted)' }}>
+            These controls are disabled until questionnaire persistence exists.
+          </p>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 gap-5">
