@@ -218,6 +218,9 @@ export const updateProfile = mutation({
     preferred_partner_age_max: v.optional(v.number()),
     okay_with_some_deviation: v.optional(v.boolean()),
     priority_weights: v.optional(v.any()),
+    is_draft: v.optional(v.boolean()),
+    dynamic_answers: v.optional(v.any()),
+    photo_storage_id: v.optional(v.id('_storage')),
   },
   handler: async (ctx, args) => {
     await requireOrganizer(ctx)

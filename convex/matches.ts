@@ -9,12 +9,11 @@ async function requireOrganizer(ctx: { auth: any }) {
 }
 
 const interestStatus = v.union(
-  v.literal('potential_match'),
-  v.literal('one_sided_interest'),
-  v.literal('mutual_interest'),
-  v.literal('no_match'),
-  v.literal('follow_up_needed'),
-  v.literal('introduced_off_platform')
+  v.literal('connected'),
+  v.literal('exchanged_contacts'),
+  v.literal('went_on_date'),
+  v.literal('in_relationship'),
+  v.literal('no_follow_up')
 )
 
 export const listByEvent = query({

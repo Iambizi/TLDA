@@ -42,12 +42,11 @@ const interviewOutcome = v.union(
 )
 
 const interestStatus = v.union(
-  v.literal('potential_match'),
-  v.literal('one_sided_interest'),
-  v.literal('mutual_interest'),
-  v.literal('no_match'),
-  v.literal('follow_up_needed'),
-  v.literal('introduced_off_platform')
+  v.literal('connected'),
+  v.literal('exchanged_contacts'),
+  v.literal('went_on_date'),
+  v.literal('in_relationship'),
+  v.literal('no_follow_up')
 )
 
 const readinessForLove = v.union(
@@ -133,6 +132,11 @@ export default defineSchema({
 
     // Timestamps
     updatedAt: v.number(), // Unix ms — set explicitly on every write
+
+    // v3 Fields
+    is_draft: v.optional(v.boolean()),
+    dynamic_answers: v.optional(v.any()),
+    photo_storage_id: v.optional(v.id('_storage')),
   }),
 
   // ─── events ───────────────────────────────────────────────
@@ -144,6 +148,7 @@ export default defineSchema({
     status: eventStatus,
     notes: v.optional(v.string()),
     updatedAt: v.number(),
+    photo_storage_id: v.optional(v.id('_storage')),
   }),
 
   // ─── applications ─────────────────────────────────────────
@@ -183,6 +188,7 @@ export default defineSchema({
     application_id: v.optional(v.id('applications')),
     attendance_status: attendanceStatus,
     organizer_notes: v.optional(v.string()),
+    payment_amount: v.optional(v.number()),
   })
     .index('by_event', ['event_id'])
     .index('by_participant', ['participant_id'])
@@ -197,8 +203,27 @@ export default defineSchema({
     interest_status: interestStatus,
     organizer_notes: v.optional(v.string()),
     updatedAt: v.number(),
+    follow_up_date: v.optional(v.number()),
   })
     .index('by_event', ['event_id'])
     .index('by_participant_a', ['participant_a_id'])
     .index('by_participant_b', ['participant_b_id']),
+
+  // ─── questionnaires ─────────────────────────────────────────
+  questionnaires: defineTable({
+    title: v.string(),
+    description: v.optional(v.string()),
+    fields: v.array(v.any()), // array of field definitions
+    is_active: v.boolean(),
+    updatedAt: v.number(),
+  }),
+
+  // ─── eventExpenses ──────────────────────────────────────────
+  eventExpenses: defineTable({
+    event_id: v.id('events'),
+    description: v.string(),
+    amount: v.number(),
+    updatedAt: v.number(),
+  })
+    .index('by_event', ['event_id']),
 })

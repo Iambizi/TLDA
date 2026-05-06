@@ -226,6 +226,7 @@ export const updateEvent = mutation({
     description: v.optional(v.string()),
     status: v.optional(eventStatus),
     notes: v.optional(v.string()),
+    photo_storage_id: v.optional(v.id('_storage')),
   },
   handler: async (ctx, args) => {
     await requireOrganizer(ctx)
