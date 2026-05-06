@@ -8,8 +8,6 @@ export function LoginForm() {
   const [error, setError] = useState<string | null>(null)
   const [pending, setPending] = useState(false)
 
-  const [flow, setFlow] = useState<'signIn' | 'signUp'>('signIn')
-
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     setPending(true)
@@ -20,9 +18,9 @@ export function LoginForm() {
     const password = formData.get('password') as string
 
     try {
-      await signIn('password', { email, password, flow })
+      await signIn('password', { email, password, flow: 'signIn' })
     } catch (err) {
-      setError(flow === 'signIn' ? 'Invalid credentials. Please try again.' : 'Could not create account. Please try again.')
+      setError('Invalid credentials. Please try again.')
     } finally {
       setPending(false)
     }
@@ -100,19 +98,8 @@ export function LoginForm() {
         className="w-full rounded-xl py-2.5 text-sm font-medium text-white transition-all disabled:opacity-60"
         style={{ background: pending ? 'var(--neutral-400)' : 'var(--accent)' }}
       >
-        {pending ? (flow === 'signIn' ? 'Signing in…' : 'Creating account...') : (flow === 'signIn' ? 'Sign in' : 'Create Account')}
+        {pending ? 'Signing in…' : 'Sign in'}
       </button>
-
-      <div className="text-center">
-        <button
-          type="button"
-          onClick={() => setFlow(flow === 'signIn' ? 'signUp' : 'signIn')}
-          className="text-xs font-medium hover:underline"
-          style={{ color: 'var(--neutral-500)' }}
-        >
-          {flow === 'signIn' ? "Need to create a local dev account? Sign up" : "Already have an account? Sign in"}
-        </button>
-      </div>
     </form>
   )
 }
