@@ -17,7 +17,9 @@ import type * as http from "../http.js";
 import type * as import_ from "../import.js";
 import type * as interviews from "../interviews.js";
 import type * as matches from "../matches.js";
+import type * as operations from "../operations.js";
 import type * as participants from "../participants.js";
+import type * as questionnaires from "../questionnaires.js";
 import type * as users from "../users.js";
 
 import type {
@@ -36,7 +38,9 @@ declare const fullApi: ApiFromModules<{
   import: typeof import_;
   interviews: typeof interviews;
   matches: typeof matches;
+  operations: typeof operations;
   participants: typeof participants;
+  questionnaires: typeof questionnaires;
   users: typeof users;
 }>;
 
