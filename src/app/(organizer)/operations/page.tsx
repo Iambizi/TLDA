@@ -6,21 +6,17 @@ import { api } from '../../../../convex/_generated/api'
 import { EVENT_STATUS_LABELS } from '@/lib/constants'
 
 export default function OperationsPage() {
-  const eventsRaw = useQuery(api.events.list)
+  const dashboard = useQuery(api.operations.getDashboardData)
 
-  if (eventsRaw === undefined) {
+  if (dashboard === undefined) {
     return <div className="p-8 text-sm" style={{ color: 'var(--muted)' }}>Loading...</div>
   }
 
-  const events = eventsRaw.map((event) => ({
-    id: event._id,
-    title: event.title,
-    status: event.status,
-    date: event.event_date
-      ? new Date(event.event_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-      : 'TBD',
-    participantCount: event.rosterCount ?? 0,
-  }))
+  const { globalRevenue, globalCosts, globalNet, events } = dashboard
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount)
+  }
 
   return (
     <div className="max-w-6xl">
@@ -35,14 +31,13 @@ export default function OperationsPage() {
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3 mb-8">
         {[
-          { label: 'Global Revenue', value: '$0', note: 'Requires participant payment fields' },
-          { label: 'Global Costs', value: '$0', note: 'Requires event expense table' },
-          { label: 'Global Net', value: '$0', note: 'Revenue minus costs' },
+          { label: 'Global Revenue', value: formatCurrency(globalRevenue) },
+          { label: 'Global Costs', value: formatCurrency(globalCosts) },
+          { label: 'Global Net', value: formatCurrency(globalNet) },
         ].map((metric) => (
           <div key={metric.label} className="rounded-2xl border p-6" style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
             <p className="text-xs font-medium uppercase tracking-wider" style={{ color: 'var(--muted)' }}>{metric.label}</p>
             <p className="mt-2 text-3xl font-semibold" style={{ color: 'var(--neutral-900)' }}>{metric.value}</p>
-            <p className="mt-2 text-xs" style={{ color: 'var(--muted)' }}>{metric.note}</p>
           </div>
         ))}
       </div>
@@ -69,22 +64,18 @@ export default function OperationsPage() {
                       {event.title}
                     </Link>
                     <p className="text-xs" style={{ color: 'var(--muted)' }}>
-                      {event.date} · {EVENT_STATUS_LABELS[event.status as keyof typeof EVENT_STATUS_LABELS] ?? event.status}
+                      {event.date ? new Date(event.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'TBD'} · {EVENT_STATUS_LABELS[event.status as keyof typeof EVENT_STATUS_LABELS] ?? event.status}
                     </p>
                   </td>
                   <td className="px-6 py-4" style={{ color: 'var(--neutral-700)' }}>{event.participantCount}</td>
-                  <td className="px-6 py-4" style={{ color: 'var(--muted)' }}>$0</td>
-                  <td className="px-6 py-4" style={{ color: 'var(--muted)' }}>$0</td>
-                  <td className="px-6 py-4 font-medium" style={{ color: 'var(--neutral-900)' }}>$0</td>
+                  <td className="px-6 py-4" style={{ color: 'var(--muted)' }}>{formatCurrency(event.revenue)}</td>
+                  <td className="px-6 py-4" style={{ color: 'var(--muted)' }}>{formatCurrency(event.costs)}</td>
+                  <td className="px-6 py-4 font-medium" style={{ color: 'var(--neutral-900)' }}>{formatCurrency(event.net)}</td>
                 </tr>
               ))}
             </tbody>
           </table>
         )}
-      </div>
-
-      <div className="mt-6 rounded-xl border p-4 text-sm" style={{ borderColor: 'var(--border)', background: 'var(--neutral-50)', color: 'var(--muted)' }}>
-        Financial values are placeholders until the v3 schema adds <code>event_expenses</code> and <code>event_participants.payment_amount</code>.
       </div>
     </div>
   )

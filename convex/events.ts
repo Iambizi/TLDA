@@ -73,7 +73,12 @@ export const getById = query({
       }
     }
 
-    return { ...event, roster: rosterWithParticipants, availableParticipants }
+    const expenses = await ctx.db
+      .query('eventExpenses')
+      .withIndex('by_event', (q) => q.eq('event_id', args.id))
+      .collect()
+
+    return { ...event, roster: rosterWithParticipants, availableParticipants, expenses }
   },
 })
 
@@ -232,5 +237,53 @@ export const updateEvent = mutation({
     await requireOrganizer(ctx)
     const { id, ...fields } = args
     await ctx.db.patch(id, { ...fields, updatedAt: Date.now() })
+  },
+})
+
+// ─── Financials ────────────────────────────────────────────────
+
+export const addExpense = mutation({
+  args: {
+    eventId: v.id('events'),
+    description: v.string(),
+    amount: v.number(),
+  },
+  handler: async (ctx, args) => {
+    await requireOrganizer(ctx)
+    await ctx.db.insert('eventExpenses', {
+      event_id: args.eventId,
+      description: args.description,
+      amount: args.amount,
+      updatedAt: Date.now(),
+    })
+  },
+})
+
+export const removeExpense = mutation({
+  args: { expenseId: v.id('eventExpenses') },
+  handler: async (ctx, args) => {
+    await requireOrganizer(ctx)
+    await ctx.db.delete(args.expenseId)
+  },
+})
+
+export const updatePaymentAmount = mutation({
+  args: {
+    eventId: v.id('events'),
+    participantId: v.id('participants'),
+    amount: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    await requireOrganizer(ctx)
+    const row = await ctx.db
+      .query('eventParticipants')
+      .withIndex('by_event_and_participant', (q) =>
+        q.eq('event_id', args.eventId).eq('participant_id', args.participantId)
+      )
+      .first()
+
+    if (!row) throw new Error('Participant not found in event roster.')
+
+    await ctx.db.patch(row._id, { payment_amount: args.amount })
   },
 })

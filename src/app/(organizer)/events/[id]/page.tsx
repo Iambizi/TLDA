@@ -9,6 +9,7 @@ import { EVENT_STATUS_LABELS } from '@/lib/constants'
 import { ParticipantAssigner } from './assigner'
 import { RemoveParticipantButton } from './remove-button'
 import { AttendanceDropdown } from './attendance-dropdown'
+import { OperationsCard } from './operations-card'
 
 export default function EventPage() {
   const params = useParams<{ id: Id<'events'> }>()
@@ -24,7 +25,7 @@ export default function EventPage() {
     notFound()
   }
 
-  const { roster, availableParticipants, ...event } = data
+  const { roster, availableParticipants, expenses, ...event } = data
 
   const dateStr = event.event_date 
     ? new Date(event.event_date).toLocaleString('en-US', { dateStyle: 'full', timeStyle: 'short' }) 
@@ -102,33 +103,7 @@ export default function EventPage() {
             )}
           </div>
 
-          <div className="rounded-2xl border p-6 shadow-sm mb-8" style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
-            <div className="mb-4 flex items-center gap-2">
-              <h2 className="text-xl font-semibold" style={{ color: 'var(--neutral-900)' }}>Operations</h2>
-              <span
-                title="Track line-item costs and participant payments here after the v3 operations schema migration."
-                className="inline-flex h-5 w-5 items-center justify-center rounded-full text-xs font-semibold"
-                style={{ background: 'var(--neutral-200)', color: 'var(--neutral-600)' }}
-              >
-                i
-              </span>
-            </div>
-            <div className="grid grid-cols-3 gap-4">
-              {[
-                { label: 'Revenue', value: '$0' },
-                { label: 'Costs', value: '$0' },
-                { label: 'Net', value: '$0' },
-              ].map((metric) => (
-                <div key={metric.label} className="rounded-xl border p-4" style={{ borderColor: 'var(--border)', background: 'var(--neutral-50)' }}>
-                  <p className="text-xs font-medium uppercase tracking-wider" style={{ color: 'var(--muted)' }}>{metric.label}</p>
-                  <p className="mt-1 text-xl font-semibold" style={{ color: 'var(--neutral-900)' }}>{metric.value}</p>
-                </div>
-              ))}
-            </div>
-            <p className="mt-4 text-xs" style={{ color: 'var(--muted)' }}>
-              Line-item expenses and participant payments require `event_expenses` and `payment_amount` from the v3 database plan.
-            </p>
-          </div>
+          <OperationsCard eventId={event._id} roster={roster} expenses={expenses} />
 
           <h2 className="text-xl font-semibold mb-4" style={{ color: 'var(--neutral-900)' }}>
             Event Roster
