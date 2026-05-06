@@ -28,6 +28,33 @@
 
 ---
 
+## Session 12 — 2026-05-06
+**Agent:** Antigravity
+**Phase:** v3 Backend Migration & Feature Implementation
+**Status:** 🟡 In Progress
+
+### What Was Done
+- **Schema Migration**: Rebased the `convex-migration` branch onto `main` and fully implemented the v3 Convex schema. We reset the local database and updated the enums and types for v3.
+- **Questionnaire Builder**: Built the Questionnaire Builder (`/settings/questionnaire`) backend and frontend. Organizers can now dynamically configure form fields inside the 3 permanent sections, saving directly to the Convex `questionnaires` schema.
+- **Operations Dashboard**: Upgraded the `/operations` and Event Detail pages to track real financials. Developed an interactive `OperationsCard` component that logs line-item `eventExpenses` and participant `payment_amount`s, automatically calculating net profit.
+- **Auth Setup**: Fully configured Convex Auth. We ran the `@convex-dev/auth` CLI to generate and securely store the `JWT_PRIVATE_KEY` and `JWKS` variables in the Convex backend.
+- **Local Account Creation**: Temporarily added a "Sign Up" toggle to the `/login` page so organizers could create their new local development accounts. We then immediately reverted it back to "Sign In Only" to guarantee platform security.
+- **Version Control**: Merged the completed `convex-migration` branch into `main` and pushed to GitHub.
+
+### Decisions Made
+- Used `v.any()` for `dynamic_answers` in the `participants` schema to balance flexible application data with fast profile rendering.
+- Secured the organizer login by only temporarily exposing the sign-up flow in development, avoiding the need for complex database seeding scripts while preventing unwanted public account creation.
+- Hardcoded the 3 primary sections of the Questionnaire Builder (Basic Info, About You, Ideal Partner) while keeping all questions within them fully customizable.
+
+### Open Questions / Blockers
+- None.
+
+### Next Steps
+- Execute **Step 3: CSV Data Import** to parse Liela's legacy spreadsheet data and insert it into the new `dynamic_answers` participant schema.
+- Wire the public `/apply` application form to dynamically render fields from the new active Questionnaire schema.
+
+---
+
 ## Session 11 — 2026-05-03
 **Agent:** Codex (GPT-5)
 **Phase:** v3 Frontend Workflow Implementation
