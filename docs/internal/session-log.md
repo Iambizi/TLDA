@@ -39,6 +39,7 @@
 - **Operations Dashboard**: Upgraded the `/operations` and Event Detail pages to track real financials. Developed an interactive `OperationsCard` component that logs line-item `eventExpenses` and participant `payment_amount`s, automatically calculating net profit.
 - **Auth Setup**: Fully configured Convex Auth. We ran the `@convex-dev/auth` CLI to generate and securely store the `JWT_PRIVATE_KEY` and `JWKS` variables in the Convex backend.
 - **Local Account Creation**: Temporarily added a "Sign Up" toggle to the `/login` page so organizers could create their new local development accounts. We then immediately reverted it back to "Sign In Only" to guarantee platform security.
+- **Documentation**: Updated `.gitignore` to track `docs/internal/` and committed the CSV import files, technical briefs, and planning documents to version control.
 - **Version Control**: Merged the completed `convex-migration` branch into `main` and pushed to GitHub.
 
 ### Decisions Made
