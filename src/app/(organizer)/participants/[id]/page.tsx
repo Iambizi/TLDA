@@ -189,7 +189,7 @@ export default function ParticipantPage() {
         <div className="w-full lg:w-80 shrink-0 flex flex-col gap-6">
           <div className="rounded-2xl border p-6 shadow-sm bg-white" style={{ borderColor: 'var(--border)' }}>
             <Link
-              href={`/participants/${participant.id}/edit`}
+              href={`/participants/${participant._id}/edit`}
               className="mb-4 block w-full rounded-xl px-4 py-2.5 text-center text-sm font-medium text-white"
               style={{ background: 'var(--neutral-900)' }}
             >

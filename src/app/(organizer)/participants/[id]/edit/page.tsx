@@ -1,88 +1,106 @@
-import type { Metadata } from 'next'
-import { notFound } from 'next/navigation'
+'use client'
+
+import { notFound, useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { createClient } from '@/lib/supabase/server'
-import { updateParticipantProfile } from '@/app/actions/participants'
+import { useQuery, useMutation } from 'convex/react'
+import { api } from '../../../../../../convex/_generated/api'
+import type { Id } from '../../../../../../convex/_generated/dataModel'
 import { LIFESTYLE_ATTRIBUTES, READINESS_LABELS } from '@/lib/constants'
 import type { LifestylePreference, ReadinessForLove } from '@/types'
-
-export const metadata: Metadata = { title: 'Edit Participant' }
-
-interface EditParticipantPageProps {
-  params: Promise<{ id: string }>
-}
+import { useState, type FormEvent } from 'react'
 
 const lifestyleOptions: LifestylePreference[] = ['want', 'dont_want', 'flexible']
 
-function TextField({
-  name,
-  label,
-  defaultValue,
-  required = false,
-  type = 'text',
-}: {
-  name: string
-  label: string
-  defaultValue?: string | number | null
-  required?: boolean
-  type?: string
+function TextField({ name, label, defaultValue, required = false, type = 'text' }: {
+  name: string; label: string; defaultValue?: string | number | null; required?: boolean; type?: string
 }) {
   return (
-    <label className="flex flex-col gap-1.5">
-      <span className="text-sm font-medium" style={{ color: 'var(--neutral-700)' }}>
-        {label}{required && <span style={{ color: 'var(--accent)' }}> *</span>}
-      </span>
-      <input
-        name={name}
-        type={type}
-        required={required}
-        defaultValue={defaultValue ?? ''}
-        className="form-input"
-      />
-    </label>
+    <div className="flex flex-col gap-1.5">
+      <label htmlFor={name} className="text-sm font-medium" style={{ color: 'var(--neutral-700)' }}>
+        {label}{required && ' *'}
+      </label>
+      <input id={name} name={name} type={type} defaultValue={defaultValue ?? ''} required={required} className="form-input" />
+    </div>
   )
 }
 
-function TextAreaField({
-  name,
-  label,
-  defaultValue,
-  rows = 3,
-}: {
-  name: string
-  label: string
-  defaultValue?: string | null
-  rows?: number
+function TextAreaField({ name, label, defaultValue }: {
+  name: string; label: string; defaultValue?: string | null
 }) {
   return (
-    <label className="flex flex-col gap-1.5">
-      <span className="text-sm font-medium" style={{ color: 'var(--neutral-700)' }}>{label}</span>
-      <textarea
-        name={name}
-        rows={rows}
-        defaultValue={defaultValue ?? ''}
-        className="form-input resize-y"
-      />
-    </label>
+    <div className="flex flex-col gap-1.5">
+      <label htmlFor={name} className="text-sm font-medium" style={{ color: 'var(--neutral-700)' }}>{label}</label>
+      <textarea id={name} name={name} rows={2} defaultValue={defaultValue ?? ''} className="form-input resize-none" />
+    </div>
   )
 }
 
-export default async function EditParticipantPage({ params }: EditParticipantPageProps) {
-  const { id } = await params
-  const supabase = await createClient() as any
+export default function EditParticipantPage() {
+  const params = useParams<{ id: Id<'participants'> }>()
+  const id = params?.id
+  const router = useRouter()
 
-  const { data: participant } = await supabase
-    .from('participants')
-    .select('*')
-    .eq('id', id)
-    .single()
+  const participant = useQuery(api.participants.getById, id ? { id } : 'skip')
+  const updateParticipant = useMutation(api.participants.updateProfile)
 
-  if (!participant) {
+  const [error, setError] = useState<string | null>(null)
+  const [pending, setPending] = useState(false)
+
+  if (participant === undefined) {
+    return <div className="p-8 text-sm" style={{ color: 'var(--muted)' }}>Loading...</div>
+  }
+
+  if (participant === null) {
     notFound()
   }
 
-  const action = updateParticipantProfile.bind(null, id)
   const priorityWeights = (participant.priority_weights || {}) as Record<string, number>
+
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    setPending(true)
+    setError(null)
+    const formData = new FormData(e.currentTarget)
+
+    try {
+      await updateParticipant({
+        id: participant._id,
+        full_name: formData.get('full_name') as string,
+        contact_info: formData.get('contact_info') as string,
+        gender: formData.get('gender') as string,
+        birthday: (formData.get('birthday') as string) || undefined,
+        age: parseInt(formData.get('age') as string) || undefined,
+        work: (formData.get('work') as string) || undefined,
+        dream_city: (formData.get('dream_city') as string) || undefined,
+        ask_out_preference: (formData.get('ask_out_preference') as string) || undefined,
+        life_in_5_years: (formData.get('life_in_5_years') as string) || undefined,
+        last_thing_that_made_you_laugh: (formData.get('last_thing_that_made_you_laugh') as string) || undefined,
+        dream_date: (formData.get('dream_date') as string) || undefined,
+        family_notes: (formData.get('family_notes') as string) || undefined,
+        vice_or_red_flag: (formData.get('vice_or_red_flag') as string) || undefined,
+        dealbreaker: (formData.get('dealbreaker') as string) || undefined,
+        random_curiosities: (formData.get('random_curiosities') as string) || undefined,
+        referral_notes: (formData.get('referral_notes') as string) || undefined,
+        values_or_worldview: (formData.get('values_or_worldview') as string) || undefined,
+        comfortable_with_man_asking_woman: formData.get('comfortable_with_man_asking_woman') === 'on',
+        comfortable_with_alcohol_meetcute: formData.get('comfortable_with_alcohol_meetcute') === 'on',
+        ready_for_love: (formData.get('ready_for_love') as ReadinessForLove) || undefined,
+        grand_amour: (formData.get('grand_amour') as string) || undefined,
+        preferred_partner_age_min: parseInt(formData.get('preferred_partner_age_min') as string) || undefined,
+        preferred_partner_age_max: parseInt(formData.get('preferred_partner_age_max') as string) || undefined,
+        okay_with_some_deviation: formData.get('okay_with_some_deviation') === 'on',
+        priority_weights: {
+          pedigree: parseInt(formData.get('priority_pedigree') as string) || 34,
+          looks: parseInt(formData.get('priority_looks') as string) || 33,
+          personality: parseInt(formData.get('priority_personality') as string) || 33,
+        },
+      })
+      router.push(`/participants/${id}`)
+    } catch (err: any) {
+      setError(err.message)
+      setPending(false)
+    }
+  }
 
   return (
     <div className="max-w-4xl">
@@ -101,19 +119,22 @@ export default async function EditParticipantPage({ params }: EditParticipantPag
         </p>
       </div>
 
-      <form action={action} className="rounded-2xl border p-8 shadow-sm flex flex-col gap-8" style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
+      <form onSubmit={handleSubmit} className="rounded-2xl border p-8 shadow-sm flex flex-col gap-8" style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
+        {error && (
+          <div className="rounded-lg px-4 py-3 text-sm" style={{ background: '#fef2f2', color: '#b91c1c', border: '1px solid #fecaca' }}>
+            {error}
+          </div>
+        )}
+
         <section>
           <h2 className="text-lg font-semibold mb-4" style={{ color: 'var(--neutral-900)' }}>Basic Info</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <TextField name="full_name" label="Full name" defaultValue={participant.full_name} required />
             <TextField name="contact_info" label="Contact info" defaultValue={participant.contact_info} required />
-            <TextField name="gender" label="Gender" defaultValue={participant.gender} required />
-            <TextField name="birthday" label="Birthday" type="date" defaultValue={participant.birthday} required />
-            <TextField name="age" label="Age" type="number" defaultValue={participant.age} required />
-            <TextField name="work" label="Work" defaultValue={participant.work} required />
-          </div>
-          <div className="mt-5 rounded-xl border p-4 text-sm" style={{ borderColor: 'var(--border)', color: 'var(--muted)', background: 'var(--neutral-50)' }}>
-            Photo upload is reserved for the v3 storage migration. A participant photo field is shown in intake and on the profile so the workflow is ready.
+            <TextField name="gender" label="Gender" defaultValue={participant.gender} />
+            <TextField name="birthday" label="Birthday" type="date" defaultValue={participant.birthday} />
+            <TextField name="age" label="Age" type="number" defaultValue={participant.age} />
+            <TextField name="work" label="Work" defaultValue={participant.work} />
           </div>
         </section>
 
@@ -145,9 +166,9 @@ export default async function EditParticipantPage({ params }: EditParticipantPag
         <section>
           <h2 className="text-lg font-semibold mb-4" style={{ color: 'var(--neutral-900)' }}>Ideal Partner</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-5">
-            <TextField name="priority_pedigree" label="Background %" type="number" defaultValue={priorityWeights.pedigree ?? 40} required />
-            <TextField name="priority_looks" label="Looks %" type="number" defaultValue={priorityWeights.looks ?? 30} required />
-            <TextField name="priority_personality" label="Personality %" type="number" defaultValue={priorityWeights.personality ?? 30} required />
+            <TextField name="priority_pedigree" label="Background %" type="number" defaultValue={priorityWeights.pedigree ?? 34} />
+            <TextField name="priority_looks" label="Looks %" type="number" defaultValue={priorityWeights.looks ?? 33} />
+            <TextField name="priority_personality" label="Personality %" type="number" defaultValue={priorityWeights.personality ?? 33} />
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <label className="flex flex-col gap-1.5">
@@ -159,8 +180,8 @@ export default async function EditParticipantPage({ params }: EditParticipantPag
               </select>
             </label>
             <TextField name="grand_amour" label="Dream relationship" defaultValue={participant.grand_amour} />
-            <TextField name="preferred_partner_age_min" label="Preferred min age" type="number" defaultValue={participant.preferred_partner_age_min ?? 18} />
-            <TextField name="preferred_partner_age_max" label="Preferred max age" type="number" defaultValue={participant.preferred_partner_age_max ?? 99} />
+            <TextField name="preferred_partner_age_min" label="Preferred min age" type="number" defaultValue={participant.preferred_partner_age_min} />
+            <TextField name="preferred_partner_age_max" label="Preferred max age" type="number" defaultValue={participant.preferred_partner_age_max} />
           </div>
           <label className="mt-4 flex items-center gap-2 text-sm" style={{ color: 'var(--neutral-700)' }}>
             <input name="okay_with_some_deviation" type="checkbox" defaultChecked={participant.okay_with_some_deviation} />
@@ -174,7 +195,7 @@ export default async function EditParticipantPage({ params }: EditParticipantPag
             ]).map((field) => (
               <label key={field.name} className="flex flex-col gap-1.5">
                 <span className="text-sm font-medium" style={{ color: 'var(--neutral-700)' }}>{field.label}</span>
-                <select name={field.name} defaultValue={participant[field.name] ?? 'flexible'} className="form-input">
+                <select name={field.name} defaultValue={(participant as any)[field.name] ?? 'flexible'} className="form-input">
                   {lifestyleOptions.map((option) => (
                     <option key={option} value={option}>{option.replace('_', ' ')}</option>
                   ))}
@@ -188,8 +209,13 @@ export default async function EditParticipantPage({ params }: EditParticipantPag
           <Link href={`/participants/${id}`} className="rounded-xl border px-5 py-2.5 text-sm font-medium" style={{ borderColor: 'var(--border)', color: 'var(--neutral-600)' }}>
             Cancel
           </Link>
-          <button type="submit" className="rounded-xl px-5 py-2.5 text-sm font-medium text-white" style={{ background: 'var(--accent)' }}>
-            Save Profile
+          <button
+            type="submit"
+            disabled={pending}
+            className="rounded-xl px-5 py-2.5 text-sm font-medium text-white disabled:opacity-60"
+            style={{ background: pending ? 'var(--neutral-400)' : 'var(--accent)' }}
+          >
+            {pending ? 'Saving...' : 'Save Profile'}
           </button>
         </div>
       </form>

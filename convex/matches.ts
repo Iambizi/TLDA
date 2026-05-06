@@ -37,6 +37,24 @@ export const listByEvent = query({
   },
 })
 
+export const listAll = query({
+  args: {},
+  handler: async (ctx) => {
+    await requireOrganizer(ctx)
+
+    const matches = await ctx.db.query('matchOutcomes').order('desc').collect()
+
+    return await Promise.all(
+      matches.map(async (m) => {
+        const participantA = await ctx.db.get(m.participant_a_id)
+        const participantB = await ctx.db.get(m.participant_b_id)
+        const event = await ctx.db.get(m.event_id)
+        return { ...m, participantA, participantB, event }
+      })
+    )
+  },
+})
+
 export const logMatchOutcome = mutation({
   args: {
     event_id: v.id('events'),

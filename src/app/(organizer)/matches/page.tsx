@@ -1,44 +1,26 @@
-import type { Metadata } from 'next'
+'use client'
+
 import Link from 'next/link'
-import { createClient } from '@/lib/supabase/server'
+import { useQuery } from 'convex/react'
+import { api } from '../../../../convex/_generated/api'
+import { INTEREST_STATUS_LABELS } from '@/lib/constants'
 
-export const metadata: Metadata = { title: 'Matches' }
+export default function GlobalMatchesPage() {
+  const matchesRaw = useQuery(api.matches.listAll)
 
-const connectionLabels: Record<string, string> = {
-  potential_match: 'Connected',
-  introduced_off_platform: 'Exchanged Contacts',
-  mutual_interest: 'Went on a Date',
-  no_match: 'No Follow-Up',
-  follow_up_needed: 'Follow-Up Needed',
-  one_sided_interest: 'Connected',
-}
+  if (matchesRaw === undefined) {
+    return <div className="p-8 text-sm" style={{ color: 'var(--muted)' }}>Loading matches...</div>
+  }
 
-export default async function GlobalMatchesPage() {
-  const supabase = await createClient() as any
-
-  const { data: matchesRaw } = await supabase
-    .from('match_outcomes')
-    .select(`
-      id,
-      event_id,
-      interest_status,
-      organizer_notes,
-      created_at,
-      events(id, title),
-      participant_a:participants!participant_a_id(id, full_name),
-      participant_b:participants!participant_b_id(id, full_name)
-    `)
-    .order('created_at', { ascending: false })
-
-  const matches = (matchesRaw || []).map((match: any) => ({
-    id: match.id,
+  const matches = matchesRaw.map((match) => ({
+    id: match._id,
     event_id: match.event_id,
-    event_title: match.events?.title ?? 'Unknown event',
-    status: connectionLabels[match.interest_status] ?? match.interest_status,
+    event_title: match.event?.title ?? 'Unknown event',
+    status: INTEREST_STATUS_LABELS[match.interest_status as keyof typeof INTEREST_STATUS_LABELS] ?? match.interest_status,
     notes: match.organizer_notes,
-    date: new Date(match.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-    participant_a: match.participant_a,
-    participant_b: match.participant_b,
+    date: new Date(match._creationTime).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+    participant_a: { id: match.participantA?._id, full_name: match.participantA?.full_name ?? 'Unknown' },
+    participant_b: { id: match.participantB?._id, full_name: match.participantB?.full_name ?? 'Unknown' },
   }))
 
   return (
@@ -49,7 +31,7 @@ export default async function GlobalMatchesPage() {
             Matches
           </h1>
           <span
-            title="Global outcome tracking across events. New v3 connection statuses are mapped onto the current match outcome table until the schema migration lands."
+            title="Global outcome tracking across events. Log matches from any event's matching page."
             className="inline-flex h-5 w-5 items-center justify-center rounded-full text-xs font-semibold"
             style={{ background: 'var(--neutral-200)', color: 'var(--neutral-600)' }}
           >
@@ -78,12 +60,12 @@ export default async function GlobalMatchesPage() {
               </tr>
             </thead>
             <tbody>
-              {matches.map((match: any, index: number) => (
+              {matches.map((match, index) => (
                 <tr key={match.id} className="hover:bg-neutral-50/50" style={index === 0 ? undefined : { boxShadow: 'inset 0 1px 0 rgba(148, 163, 184, 0.14)' }}>
                   <td className="px-6 py-4 font-medium" style={{ color: 'var(--neutral-900)' }}>
-                    <Link href={`/participants/${match.participant_a?.id}`} className="hover:underline">{match.participant_a?.full_name ?? 'Unknown'}</Link>
+                    <Link href={`/participants/${match.participant_a.id}`} className="hover:underline">{match.participant_a.full_name}</Link>
                     <span style={{ color: 'var(--muted)' }}> + </span>
-                    <Link href={`/participants/${match.participant_b?.id}`} className="hover:underline">{match.participant_b?.full_name ?? 'Unknown'}</Link>
+                    <Link href={`/participants/${match.participant_b.id}`} className="hover:underline">{match.participant_b.full_name}</Link>
                   </td>
                   <td className="px-6 py-4">
                     <Link href={`/events/${match.event_id}`} className="hover:underline" style={{ color: 'var(--neutral-700)' }}>

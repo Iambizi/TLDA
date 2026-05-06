@@ -1,37 +1,63 @@
-import type { Metadata } from 'next'
-import { notFound } from 'next/navigation'
+'use client'
+
+import { notFound, useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { createClient } from '@/lib/supabase/server'
+import { useQuery, useMutation } from 'convex/react'
+import { api } from '../../../../../../convex/_generated/api'
+import type { Id } from '../../../../../../convex/_generated/dataModel'
 import { EVENT_STATUS_LABELS } from '@/lib/constants'
-import { updateEvent } from '@/app/actions/events'
+import { useState, type FormEvent } from 'react'
 
-export const metadata: Metadata = { title: 'Edit Event' }
+export default function EditEventPage() {
+  const params = useParams<{ id: Id<'events'> }>()
+  const id = params?.id
+  const router = useRouter()
 
-interface EditEventPageProps {
-  params: Promise<{ id: string }>
-}
+  const data = useQuery(api.events.getById, id ? { id } : 'skip')
+  const updateEvent = useMutation(api.events.updateEvent)
 
-function datetimeLocal(value: string | null) {
-  if (!value) return ''
-  const date = new Date(value)
-  const offset = date.getTimezoneOffset()
-  const local = new Date(date.getTime() - offset * 60_000)
-  return local.toISOString().slice(0, 16)
-}
+  const [error, setError] = useState<string | null>(null)
+  const [pending, setPending] = useState(false)
 
-export default async function EditEventPage({ params }: EditEventPageProps) {
-  const { id } = await params
-  const supabase = await createClient() as any
-  const { data: event } = await supabase.from('events').select('*').eq('id', id).single()
+  if (data === undefined) {
+    return <div className="p-8 text-sm" style={{ color: 'var(--muted)' }}>Loading...</div>
+  }
 
-  if (!event) {
+  if (data === null) {
     notFound()
   }
 
-  const action = updateEvent.bind(null, id)
+  const { ...event } = data
+
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    setPending(true)
+    setError(null)
+    const formData = new FormData(e.currentTarget)
+
+    try {
+      await updateEvent({
+        id: event._id,
+        title: formData.get('title') as string,
+        location: (formData.get('location') as string) || undefined,
+        description: (formData.get('description') as string) || undefined,
+        event_date: formData.get('event_date') ? new Date(formData.get('event_date') as string).getTime() : undefined,
+        status: (formData.get('status') as 'draft' | 'open' | 'closed' | 'completed' | 'archived') || undefined,
+        notes: (formData.get('notes') as string) || undefined,
+      })
+      router.push(`/events/${id}`)
+    } catch (err: any) {
+      setError(err.message)
+      setPending(false)
+    }
+  }
+
+  const eventDateValue = event.event_date
+    ? new Date(event.event_date).toISOString().slice(0, 16)
+    : ''
 
   return (
-    <div className="max-w-3xl">
+    <div className="max-w-2xl">
       <div className="mb-6">
         <Link href={`/events/${id}`} className="text-sm font-medium hover:underline" style={{ color: 'var(--neutral-500)' }}>
           ← Back to event
@@ -39,52 +65,69 @@ export default async function EditEventPage({ params }: EditEventPageProps) {
       </div>
 
       <div className="mb-8">
-        <h1 className="text-3xl font-semibold" style={{ color: 'var(--neutral-900)' }}>Edit Event</h1>
-        <p className="mt-1 text-sm" style={{ color: 'var(--muted)' }}>Update date, location, notes, and event details.</p>
+        <h1 className="text-3xl font-semibold" style={{ color: 'var(--neutral-900)' }}>
+          Edit Event
+        </h1>
+        <p className="mt-1 text-sm" style={{ color: 'var(--muted)' }}>
+          Update event details and notes.
+        </p>
       </div>
 
-      <form action={action} className="rounded-2xl border p-8 shadow-sm flex flex-col gap-5" style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
-        <label className="flex flex-col gap-1.5">
-          <span className="text-sm font-medium" style={{ color: 'var(--neutral-700)' }}>Title</span>
-          <input name="title" required defaultValue={event.title} className="form-input" />
-        </label>
+      <form onSubmit={handleSubmit} className="rounded-2xl border p-8 shadow-sm flex flex-col gap-6" style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
+        {error && (
+          <div className="rounded-lg px-4 py-3 text-sm" style={{ background: '#fef2f2', color: '#b91c1c', border: '1px solid #fecaca' }}>
+            {error}
+          </div>
+        )}
 
-        <label className="flex flex-col gap-1.5">
-          <span className="text-sm font-medium" style={{ color: 'var(--neutral-700)' }}>Date</span>
-          <input name="event_date" type="datetime-local" defaultValue={datetimeLocal(event.event_date)} className="form-input" />
-        </label>
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor="title" className="text-sm font-medium" style={{ color: 'var(--neutral-700)' }}>Title *</label>
+          <input id="title" name="title" type="text" required defaultValue={event.title} className="form-input" />
+        </div>
 
-        <label className="flex flex-col gap-1.5">
-          <span className="text-sm font-medium" style={{ color: 'var(--neutral-700)' }}>Location</span>
-          <input name="location" defaultValue={event.location ?? ''} className="form-input" />
-        </label>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="event_date" className="text-sm font-medium" style={{ color: 'var(--neutral-700)' }}>Date & Time</label>
+            <input id="event_date" name="event_date" type="datetime-local" defaultValue={eventDateValue} className="form-input" />
+          </div>
 
-        <label className="flex flex-col gap-1.5">
-          <span className="text-sm font-medium" style={{ color: 'var(--neutral-700)' }}>Status</span>
-          <select name="status" defaultValue={event.status} className="form-input">
-            {Object.entries(EVENT_STATUS_LABELS).map(([value, label]) => (
-              <option key={value} value={value}>{label}</option>
-            ))}
-          </select>
-        </label>
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="status" className="text-sm font-medium" style={{ color: 'var(--neutral-700)' }}>Status</label>
+            <select id="status" name="status" defaultValue={event.status} className="form-input">
+              {Object.entries(EVENT_STATUS_LABELS).map(([value, label]) => (
+                <option key={value} value={value}>{label}</option>
+              ))}
+            </select>
+          </div>
+        </div>
 
-        <label className="flex flex-col gap-1.5">
-          <span className="text-sm font-medium" style={{ color: 'var(--neutral-700)' }}>Description</span>
-          <textarea name="description" rows={3} defaultValue={event.description ?? ''} className="form-input resize-y" />
-        </label>
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor="location" className="text-sm font-medium" style={{ color: 'var(--neutral-700)' }}>Location</label>
+          <input id="location" name="location" type="text" defaultValue={event.location ?? ''} className="form-input" placeholder="Venue name and address" />
+        </div>
 
-        <label className="flex flex-col gap-1.5">
-          <span className="text-sm font-medium" style={{ color: 'var(--neutral-700)' }}>Meeting Notes</span>
-          <textarea name="notes" rows={5} defaultValue={event.notes ?? ''} className="form-input resize-y" />
-        </label>
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor="description" className="text-sm font-medium" style={{ color: 'var(--neutral-700)' }}>Description</label>
+          <textarea id="description" name="description" rows={3} defaultValue={event.description ?? ''} className="form-input resize-none" placeholder="Optional event description" />
+        </div>
 
-        <div className="rounded-xl border p-4 text-sm" style={{ borderColor: 'var(--border)', color: 'var(--muted)', background: 'var(--neutral-50)' }}>
-          Event photo upload will be enabled after the v3 storage migration adds `events.photo_url`.
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor="notes" className="text-sm font-medium" style={{ color: 'var(--neutral-700)' }}>Organizer Notes</label>
+          <textarea id="notes" name="notes" rows={3} defaultValue={event.notes ?? ''} className="form-input resize-none" placeholder="Internal notes, reminders, observations..." />
         </div>
 
         <div className="flex justify-end gap-3 border-t pt-6" style={{ borderColor: 'var(--border)' }}>
-          <Link href={`/events/${id}`} className="rounded-xl border px-5 py-2.5 text-sm font-medium" style={{ borderColor: 'var(--border)', color: 'var(--neutral-600)' }}>Cancel</Link>
-          <button type="submit" className="rounded-xl px-5 py-2.5 text-sm font-medium text-white" style={{ background: 'var(--accent)' }}>Save Event</button>
+          <Link href={`/events/${id}`} className="rounded-xl border px-5 py-2.5 text-sm font-medium" style={{ borderColor: 'var(--border)', color: 'var(--neutral-600)' }}>
+            Cancel
+          </Link>
+          <button
+            type="submit"
+            disabled={pending}
+            className="rounded-xl px-5 py-2.5 text-sm font-medium text-white disabled:opacity-60"
+            style={{ background: pending ? 'var(--neutral-400)' : 'var(--accent)' }}
+          >
+            {pending ? 'Saving...' : 'Save Event'}
+          </button>
         </div>
       </form>
     </div>

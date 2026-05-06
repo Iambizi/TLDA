@@ -22,7 +22,16 @@ export const list = query({
   args: {},
   handler: async (ctx) => {
     await requireOrganizer(ctx)
-    return await ctx.db.query('events').order('desc').collect()
+    const events = await ctx.db.query('events').order('desc').collect()
+    return await Promise.all(
+      events.map(async (e) => {
+        const roster = await ctx.db
+          .query('eventParticipants')
+          .withIndex('by_event', (q) => q.eq('event_id', e._id))
+          .collect()
+        return { ...e, rosterCount: roster.length }
+      })
+    )
   },
 })
 

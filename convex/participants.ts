@@ -183,3 +183,46 @@ export const deleteParticipant = mutation({
     await ctx.db.delete(args.participantId)
   },
 })
+
+/**
+ * Update all editable fields on a participant profile.
+ * Organizer-only.
+ */
+export const updateProfile = mutation({
+  args: {
+    id: v.id('participants'),
+    full_name: v.string(),
+    contact_info: v.string(),
+    gender: v.optional(v.string()),
+    birthday: v.optional(v.string()),
+    age: v.optional(v.number()),
+    work: v.optional(v.string()),
+    // About You
+    dream_city: v.optional(v.string()),
+    ask_out_preference: v.optional(v.string()),
+    life_in_5_years: v.optional(v.string()),
+    last_thing_that_made_you_laugh: v.optional(v.string()),
+    dream_date: v.optional(v.string()),
+    family_notes: v.optional(v.string()),
+    vice_or_red_flag: v.optional(v.string()),
+    dealbreaker: v.optional(v.string()),
+    random_curiosities: v.optional(v.string()),
+    referral_notes: v.optional(v.string()),
+    values_or_worldview: v.optional(v.string()),
+    comfortable_with_man_asking_woman: v.optional(v.boolean()),
+    comfortable_with_alcohol_meetcute: v.optional(v.boolean()),
+    // Ideal Partner
+    ready_for_love: v.optional(v.union(v.literal('yes'), v.literal('not_sure'), v.literal('no'))),
+    grand_amour: v.optional(v.string()),
+    preferred_partner_age_min: v.optional(v.number()),
+    preferred_partner_age_max: v.optional(v.number()),
+    okay_with_some_deviation: v.optional(v.boolean()),
+    priority_weights: v.optional(v.any()),
+  },
+  handler: async (ctx, args) => {
+    await requireOrganizer(ctx)
+    const { id, ...fields } = args
+    await ctx.db.patch(id, { ...fields, updatedAt: Date.now() })
+  },
+})
+
