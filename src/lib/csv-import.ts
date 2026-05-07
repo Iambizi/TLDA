@@ -473,6 +473,7 @@ export function hasDuplicateMappedTargets(mapping: CsvImportMapping): boolean {
   const seen = new Set<CsvImportField>()
   for (const target of getMappedTargets(mapping)) {
     if (PRIORITY_TARGETS.includes(target as typeof PRIORITY_TARGETS[number])) continue
+    if (target === 'dynamic_answer') continue
     if (seen.has(target)) return true
     seen.add(target)
   }
