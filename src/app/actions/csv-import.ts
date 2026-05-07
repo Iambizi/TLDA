@@ -146,7 +146,7 @@ async function analyzeCsvApplicantImport(input: CsvImportInput): Promise<{ heade
   const seenNameBirthdays = new Set<string>()
 
   // Admins are importing legacy data, so we don't want strict validation to block imports.
-  const RelaxedCsvRowSchema = ApplicationFormSchema.deepPartial().extend({
+  const RelaxedCsvRowSchema = ApplicationFormSchema.partial().extend({
     full_name: z.string().min(1, 'Name is required'),
   })
 
