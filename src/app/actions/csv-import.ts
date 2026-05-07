@@ -146,11 +146,19 @@ async function analyzeCsvApplicantImport(input: CsvImportInput): Promise<{ heade
   const seenNameBirthdays = new Set<string>()
 
   // Admins are importing legacy data, so we don't want strict validation to block imports.
+  // Override priority_weights to drop the "must sum to 100" constraint — Liela's notes are partial.
   const RelaxedCsvRowSchema = ApplicationFormSchema.partial().extend({
     full_name: z.string().min(1, 'Name is required'),
+    priority_weights: z.record(z.string(), z.number().min(0).max(100)).optional(),
   })
 
-  const preparedRows = preliminaryRows.map((row) => {
+  // Skip entirely blank rows (no name at all)
+  const nonEmptyRows = preliminaryRows.filter((row) => {
+    const name = String(row.rawData.full_name ?? '').trim()
+    return name.length > 0
+  })
+
+  const preparedRows = nonEmptyRows.map((row) => {
     const parsed = RelaxedCsvRowSchema.safeParse(row.rawData)
     const duplicateReasons: string[] = []
 
