@@ -7,12 +7,17 @@ export type CsvImportField =
   | 'priority_pedigree'
   | 'priority_looks'
   | 'priority_personality'
+  | 'dynamic_answer'
+  | 'attendance_status'
+  | 'payment_amount'
+  | 'interview_notes'
 
 export type CsvImportMapping = Record<string, CsvImportField | ''>
 
 export interface CsvImportInput {
   csvText: string
   mapping: CsvImportMapping
+  eventId?: string
 }
 
 export interface CsvPreviewRow {
@@ -86,6 +91,10 @@ export const CSV_IMPORT_FIELD_OPTIONS: Array<{ value: CsvImportField | ''; label
   { value: 'random_curiosities', label: 'Random Curiosities' },
   { value: 'referral_notes', label: 'Referral Notes' },
   { value: 'values_or_worldview', label: 'Values Or Worldview' },
+  { value: 'dynamic_answer', label: 'Dynamic Answer (Keep Original Header)' },
+  { value: 'attendance_status', label: 'Attendance Status (e.g. Priority / status)' },
+  { value: 'payment_amount', label: 'Payment Amount (e.g. PAID for snacks)' },
+  { value: 'interview_notes', label: 'Interview Notes' },
 ]
 
 const HEADER_ALIASES: Record<string, CsvImportField> = {
@@ -108,6 +117,8 @@ const HEADER_ALIASES: Record<string, CsvImportField> = {
   work: 'work',
   profession: 'work',
   job: 'work',
+  prioritystatus: 'attendance_status',
+  paidforsnacksanddrinks: 'payment_amount',
   pedigree: 'priority_pedigree',
   prioritypedigree: 'priority_pedigree',
   looks: 'priority_looks',
@@ -126,20 +137,26 @@ const HEADER_ALIASES: Record<string, CsvImportField> = {
   maxage: 'preferred_partner_age_max',
   okaywithsomedeviation: 'okay_with_some_deviation',
   flexibilityonagerange: 'okay_with_some_deviation',
-  dreamcity: 'dream_city',
-  askoutpreference: 'ask_out_preference',
-  comfortablewithmanaskingwoman: 'comfortable_with_man_asking_woman',
-  comfortablewithalcoholmeetcute: 'comfortable_with_alcohol_meetcute',
-  lifein5years: 'life_in_5_years',
-  lastthingthatmadeyoulaugh: 'last_thing_that_made_you_laugh',
-  dreamdate: 'dream_date',
-  familynotes: 'family_notes',
-  family: 'family_notes',
-  viceorredflag: 'vice_or_red_flag',
+  dreamcity: 'dynamic_answer',
+  askoutpreference: 'dynamic_answer',
+  comfortablewithmanaskingwoman: 'dynamic_answer',
+  comfortablewithalcoholmeetcute: 'dynamic_answer',
+  lifein5years: 'dynamic_answer',
+  lastthingthatmadeyoulaugh: 'dynamic_answer',
+  dreamdate: 'dynamic_answer',
+  idealfirstdate: 'dynamic_answer',
+  familynotes: 'dynamic_answer',
+  family: 'dynamic_answer',
+  viceorredflag: 'dealbreaker',
   dealbreaker: 'dealbreaker',
-  randomcuriosities: 'random_curiosities',
-  random: 'random_curiosities',
+  randomcuriosities: 'dynamic_answer',
+  random: 'dynamic_answer',
+  tellmeacoolfunnyinterestingstoryaboutyou: 'dynamic_answer',
+  '1thingyouareexcitedaboutforthenight': 'dynamic_answer',
+  '1thingyouarefearfulofforthenight': 'dynamic_answer',
+  whatmakesyoufeelconnectedtosomeone: 'interview_notes',
   referralnotes: 'referral_notes',
+  whoelseshouldweinvite: 'referral_notes',
   howdidyouhearaboutus: 'referral_notes',
   valuesorworldview: 'values_or_worldview',
 }
@@ -158,8 +175,22 @@ export function normalizeHeader(header: string): string {
   return header.trim().toLowerCase().replace(/[^a-z0-9]+/g, '')
 }
 
+function cleanCsvText(csvText: string): string {
+  const lines = csvText.split(/\r?\n/)
+  const headerIndex = lines.findIndex((line) => {
+    const upper = line.toUpperCase()
+    return upper.includes('NAME') && (upper.includes('EMAIL') || upper.includes('GENDER') || upper.includes('AGE'))
+  })
+
+  if (headerIndex > 0) {
+    return lines.slice(headerIndex).join('\n')
+  }
+  return csvText
+}
+
 export function parseCsvHeaders(csvText: string): string[] {
-  const parsed = Papa.parse<Record<string, string>>(csvText, {
+  const cleanedText = cleanCsvText(csvText)
+  const parsed = Papa.parse<Record<string, string>>(cleanedText, {
     header: true,
     preview: 1,
     skipEmptyLines: true,
@@ -179,7 +210,8 @@ export function autoMapHeaders(headers: string[]): CsvImportMapping {
 }
 
 export function parseCsvRows(csvText: string): Array<Record<string, string>> {
-  const parsed = Papa.parse<Record<string, string>>(csvText, {
+  const cleanedText = cleanCsvText(csvText)
+  const parsed = Papa.parse<Record<string, string>>(cleanedText, {
     header: true,
     skipEmptyLines: 'greedy',
     transformHeader: (header) => header.trim(),
@@ -218,6 +250,52 @@ export function buildRawApplicationFromRow(
 
     if (target === 'priority_personality') {
       priorityWeights.personality = parseNumericValue(value) ?? priorityWeights.personality
+      continue
+    }
+
+    if (target === 'dynamic_answer') {
+      if (!rawData.dynamic_answers) rawData.dynamic_answers = {}
+      ;(rawData.dynamic_answers as Record<string, unknown>)[header] = value
+      continue
+    }
+
+    if (target === 'interview_notes') {
+      if (value) {
+        const matches = value.match(/(\d+)%\s*(looks|pedigree|personality)/gi)
+        if (matches) {
+           for (const match of matches) {
+              const num = parseInt(match, 10)
+              if (match.toLowerCase().includes('looks')) priorityWeights.looks = num
+              if (match.toLowerCase().includes('pedigree')) priorityWeights.pedigree = num
+              if (match.toLowerCase().includes('personality')) priorityWeights.personality = num
+           }
+        }
+        
+        const lines = value.split('\n')
+        const dealbreakers: string[] = []
+        for (const line of lines) {
+           if (line.toLowerCase().includes('dealbreaker') || line.toLowerCase().includes('red flag')) {
+             dealbreakers.push(line.trim())
+           }
+        }
+        if (dealbreakers.length > 0) {
+           rawData.dealbreaker = rawData.dealbreaker 
+             ? rawData.dealbreaker + '\n' + dealbreakers.join('\n') 
+             : dealbreakers.join('\n')
+        }
+      }
+
+      rawData.interview_notes = value
+      continue
+    }
+
+    if (target === 'attendance_status') {
+      rawData.attendance_status = value
+      continue
+    }
+
+    if (target === 'payment_amount') {
+      rawData.payment_amount = value
       continue
     }
 

@@ -24,6 +24,13 @@ interface PreparedImportRow {
   rowNumber: number
   rawData: Record<string, unknown>
   parsedData: ApplicationFormValues | null
+  specialData: {
+    dynamic_answers?: Record<string, unknown>
+    attendance_status?: string
+    payment_amount?: string
+    interview_notes?: string
+    dealbreaker?: string
+  }
   summary: string
   status: 'valid' | 'duplicate' | 'error'
   errors: string[]
@@ -59,15 +66,23 @@ export async function importCsvApplicants(
         row.status === 'valid' && row.parsedData !== null
     )
 
+    const rowsToInsert = validRows.map((row) => ({
+      ...row.parsedData,
+      specialData: row.specialData,
+    }))
+
     let insertedCount = 0
 
-    for (const row of validRows) {
+    if (rowsToInsert.length > 0) {
       try {
-        await fetchMutation(api.applications.submitApplication, row.parsedData as any)
-        insertedCount += 1
+        const result = await fetchMutation(api.import.executeCsvImport, {
+          eventId: input.eventId,
+          rows: rowsToInsert,
+        })
+        insertedCount = result.insertedCount
       } catch (err: any) {
         console.error('CSV application insert error:', err)
-        throw new Error(`Unable to create application for row ${row.rowNumber}.`)
+        throw new Error('Unable to execute CSV import transaction on the database.')
       }
     }
 
@@ -161,6 +176,13 @@ async function analyzeCsvApplicantImport(input: CsvImportInput): Promise<{ heade
       rowNumber: row.rowNumber,
       rawData: row.rawData,
       parsedData: parsed.success ? parsed.data : null,
+      specialData: {
+        dynamic_answers: row.rawData.dynamic_answers as Record<string, unknown> | undefined,
+        attendance_status: row.rawData.attendance_status as string | undefined,
+        payment_amount: row.rawData.payment_amount as string | undefined,
+        interview_notes: row.rawData.interview_notes as string | undefined,
+        dealbreaker: row.rawData.dealbreaker as string | undefined,
+      },
       summary: row.summary,
       status: duplicateReasons.length > 0 ? 'duplicate' : errors.length > 0 ? 'error' : 'valid',
       errors,

@@ -10,12 +10,16 @@ import {
   type CsvPreviewResult,
 } from '@/lib/csv-import'
 import { importCsvApplicants, previewCsvApplicantImport } from '@/app/actions/csv-import'
+import { useQuery } from 'convex/react'
+import { api } from '../../../../../convex/_generated/api'
 
 export function ImportClient() {
   const [fileName, setFileName] = useState('')
   const [csvText, setCsvText] = useState('')
   const [headers, setHeaders] = useState<string[]>([])
   const [mapping, setMapping] = useState<CsvImportMapping>({})
+  const [eventId, setEventId] = useState<string | undefined>(undefined)
+  const events = useQuery(api.events.list)
   const [previewResult, setPreviewResult] = useState<CsvPreviewResult | null>(null)
   const [previewError, setPreviewError] = useState<string | null>(null)
   const [importResult, setImportResult] = useState<CsvImportExecutionResult | null>(null)
@@ -71,7 +75,7 @@ export function ImportClient() {
     setImportResult(null)
     setImportError(null)
     startPreviewTransition(async () => {
-      const result = await previewCsvApplicantImport({ csvText, mapping })
+      const result = await previewCsvApplicantImport({ csvText, mapping, eventId })
       if ('error' in result) {
         setPreviewError(result.error)
         setPreviewResult(null)
@@ -85,7 +89,7 @@ export function ImportClient() {
   function handleImport() {
     setImportError(null)
     startImportTransition(async () => {
-      const result = await importCsvApplicants({ csvText, mapping })
+      const result = await importCsvApplicants({ csvText, mapping, eventId })
       if ('error' in result) {
         setImportError(result.error)
         return
@@ -137,6 +141,27 @@ export function ImportClient() {
               Loaded <span className="font-medium">{fileName}</span> with {headers.length} columns.
             </p>
           )}
+
+          <div className="flex flex-col gap-1.5 mt-4">
+            <label className="text-sm font-medium" style={{ color: 'var(--neutral-700)' }}>
+              Target Event (Optional)
+            </label>
+            <p className="text-xs mb-1" style={{ color: 'var(--muted)' }}>
+              If selected, imported participants will automatically be assigned to this event with their imported attendance and payment status.
+            </p>
+            <select
+              value={eventId ?? ''}
+              onChange={(e) => setEventId(e.target.value || undefined)}
+              className="form-input w-full max-w-md"
+            >
+              <option value="">-- No Event --</option>
+              {events?.map((e) => (
+                <option key={e._id} value={e._id}>
+                  {e.title}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
       </div>
 
