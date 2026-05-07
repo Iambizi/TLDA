@@ -82,8 +82,9 @@ export async function importCsvApplicants(
         })
         insertedCount = result.insertedCount
       } catch (err: any) {
-        console.error('CSV application insert error:', err)
-        throw new Error('Unable to execute CSV import transaction on the database.')
+        const detail = err?.data?.message ?? err?.message ?? String(err)
+        console.error('CSV application insert error:', detail, err)
+        throw new Error(`Import failed: ${detail}`)
       }
     }
 

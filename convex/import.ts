@@ -72,14 +72,68 @@ export const executeCsvImport = mutation({
       )
 
       // 1. Insert Participant
-      const participantId = await ctx.db.insert("participants", {
-        ...safeParticipantData,
+      // Coerce numeric fields that may come in as strings from the CSV
+      const ageRaw = safeParticipantData.age ?? rest.age
+      const age = ageRaw !== undefined && ageRaw !== '' ? Number(ageRaw) : undefined
+      const preferred_partner_age_min = safeParticipantData.preferred_partner_age_min !== undefined
+        ? Number(safeParticipantData.preferred_partner_age_min) : undefined
+      const preferred_partner_age_max = safeParticipantData.preferred_partner_age_max !== undefined
+        ? Number(safeParticipantData.preferred_partner_age_max) : undefined
+
+      // Build a clean object — drop any key with undefined/null/empty-string value
+      // so Convex doesn't reject unrecognized undefined fields
+      const cleanParticipant: Record<string, unknown> = {
+        full_name: String(safeParticipantData.full_name || rest.full_name || ''),
         contact_info: contactInfo,
-        dealbreaker: specialData?.dealbreaker || rest.dealbreaker || undefined,
-        priority_weights: sanitizedWeights,
-        dynamic_answers: Object.keys(dynamicAnswers).length > 0 ? dynamicAnswers : undefined,
         updatedAt: now,
-      });
+      }
+      const optionalFields: Array<[string, unknown]> = [
+        ['gender', safeParticipantData.gender],
+        ['age', isNaN(age as number) ? undefined : age],
+        ['birthday', safeParticipantData.birthday],
+        ['work', safeParticipantData.work],
+        ['dream_city', safeParticipantData.dream_city],
+        ['ask_out_preference', safeParticipantData.ask_out_preference],
+        ['comfortable_with_man_asking_woman', safeParticipantData.comfortable_with_man_asking_woman],
+        ['comfortable_with_alcohol_meetcute', safeParticipantData.comfortable_with_alcohol_meetcute],
+        ['life_in_5_years', safeParticipantData.life_in_5_years],
+        ['last_thing_that_made_you_laugh', safeParticipantData.last_thing_that_made_you_laugh],
+        ['dream_date', safeParticipantData.dream_date],
+        ['family_notes', safeParticipantData.family_notes],
+        ['vice_or_red_flag', safeParticipantData.vice_or_red_flag],
+        ['dealbreaker', specialData?.dealbreaker || safeParticipantData.dealbreaker],
+        ['random_curiosities', safeParticipantData.random_curiosities],
+        ['referral_notes', safeParticipantData.referral_notes],
+        ['values_or_worldview', safeParticipantData.values_or_worldview],
+        ['ready_for_love', safeParticipantData.ready_for_love],
+        ['grand_amour', safeParticipantData.grand_amour],
+        ['preferred_partner_age_min', isNaN(preferred_partner_age_min as number) ? undefined : preferred_partner_age_min],
+        ['preferred_partner_age_max', isNaN(preferred_partner_age_max as number) ? undefined : preferred_partner_age_max],
+        ['okay_with_some_deviation', safeParticipantData.okay_with_some_deviation],
+        ['has_kids', safeParticipantData.has_kids],
+        ['partner_has_kids', safeParticipantData.partner_has_kids],
+        ['travels_world', safeParticipantData.travels_world],
+        ['partner_travels_world', safeParticipantData.partner_travels_world],
+        ['is_divorced', safeParticipantData.is_divorced],
+        ['partner_is_divorced', safeParticipantData.partner_is_divorced],
+        ['smokes_drug_friendly', safeParticipantData.smokes_drug_friendly],
+        ['partner_smokes_drug_friendly', safeParticipantData.partner_smokes_drug_friendly],
+        ['has_tattoos', safeParticipantData.has_tattoos],
+        ['partner_has_tattoos', safeParticipantData.partner_has_tattoos],
+        ['fitness_level', safeParticipantData.fitness_level],
+        ['partner_fitness', safeParticipantData.partner_fitness],
+        ['close_with_family', safeParticipantData.close_with_family],
+        ['partner_close_with_family', safeParticipantData.partner_close_with_family],
+        ['priority_weights', sanitizedWeights],
+        ['dynamic_answers', Object.keys(dynamicAnswers).length > 0 ? dynamicAnswers : undefined],
+      ]
+      for (const [k, v] of optionalFields) {
+        if (v !== undefined && v !== null && v !== '') {
+          cleanParticipant[k] = v
+        }
+      }
+
+      const participantId = await ctx.db.insert("participants", cleanParticipant as any);
 
       // 2. Insert Application (assume approved)
       const applicationId = await ctx.db.insert("applications", {
