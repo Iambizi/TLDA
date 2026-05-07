@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { ApplicationFormSchema, type ApplicationFormValues } from '@/lib/schemas'
+import { z } from 'zod'
 import { fetchMutation, fetchQuery } from 'convex/nextjs'
 import { api } from '../../../convex/_generated/api'
 import {
@@ -144,18 +145,28 @@ async function analyzeCsvApplicantImport(input: CsvImportInput): Promise<{ heade
   const seenContacts = new Set<string>()
   const seenNameBirthdays = new Set<string>()
 
+  // Admins are importing legacy data, so we don't want strict validation to block imports.
+  const RelaxedCsvRowSchema = ApplicationFormSchema.deepPartial().extend({
+    full_name: z.string().min(1, 'Name is required'),
+  })
+
   const preparedRows = preliminaryRows.map((row) => {
-    const parsed = ApplicationFormSchema.safeParse(row.rawData)
+    const parsed = RelaxedCsvRowSchema.safeParse(row.rawData)
     const duplicateReasons: string[] = []
 
     if (row.normalizedContact) {
-      if (seenContacts.has(row.normalizedContact)) {
-        duplicateReasons.push('Duplicate contact info within this CSV.')
+      // Don't treat placeholder notes like "reminded" or "sent email" as duplicate constraints
+      const isPlaceholder = !row.normalizedContact.includes('@') && !/\d{7,}/.test(row.normalizedContact)
+      
+      if (!isPlaceholder) {
+        if (seenContacts.has(row.normalizedContact)) {
+          duplicateReasons.push('Duplicate contact info within this CSV.')
+        }
+        if (existingContacts.has(row.normalizedContact)) {
+          duplicateReasons.push('Contact info already exists in the database.')
+        }
+        seenContacts.add(row.normalizedContact)
       }
-      if (existingContacts.has(row.normalizedContact)) {
-        duplicateReasons.push('Contact info already exists in the database.')
-      }
-      seenContacts.add(row.normalizedContact)
     }
 
     if (row.normalizedNameBirthday) {
