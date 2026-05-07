@@ -1,6 +1,7 @@
 'use client'
 
-import { startTransition, useMemo, useState, useTransition } from 'react'
+import { startTransition, useEffect, useMemo, useState, useTransition } from 'react'
+import { useRouter } from 'next/navigation'
 import {
   autoMapHeaders,
   CSV_IMPORT_FIELD_OPTIONS,
@@ -14,6 +15,7 @@ import { useQuery } from 'convex/react'
 import { api } from '../../../../../convex/_generated/api'
 
 export function ImportClient() {
+  const router = useRouter()
   const [fileName, setFileName] = useState('')
   const [csvText, setCsvText] = useState('')
   const [headers, setHeaders] = useState<string[]>([])
@@ -95,18 +97,15 @@ export function ImportClient() {
         return
       }
       setImportResult(result)
-      startTransition(() => {
-        setPreviewResult((current) =>
-          current
-            ? {
-                ...current,
-                validCount: 0,
-              }
-            : current
-        )
-      })
     })
   }
+
+  // Auto-redirect to participants after 3s on success
+  useEffect(() => {
+    if (!importResult) return
+    const timer = setTimeout(() => router.push('/participants'), 3000)
+    return () => clearTimeout(timer)
+  }, [importResult, router])
 
   async function copyErrorReport(text: string) {
     try {
@@ -114,6 +113,47 @@ export function ImportClient() {
     } catch {
       setImportError('Could not copy the error report to the clipboard.')
     }
+  }
+
+  // Show success screen instead of the form
+  if (importResult) {
+    return (
+      <div
+        className="rounded-2xl border p-10 shadow-sm flex flex-col items-center gap-6 text-center"
+        style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}
+      >
+        <div
+          className="w-16 h-16 rounded-full flex items-center justify-center text-3xl"
+          style={{ background: 'var(--success-light, #d1fae5)' }}
+        >
+          ✅
+        </div>
+        <div>
+          <h2 className="text-2xl font-bold mb-2" style={{ color: 'var(--neutral-900)' }}>
+            Import Complete
+          </h2>
+          <p className="text-base" style={{ color: 'var(--muted)' }}>
+            Successfully imported{' '}
+            <span className="font-semibold" style={{ color: 'var(--neutral-900)' }}>
+              {importResult.insertedCount} participant{importResult.insertedCount !== 1 ? 's' : ''}
+            </span>
+            {importResult.skippedDuplicates > 0 && (
+              <>, skipped <span className="font-semibold">{importResult.skippedDuplicates}</span> duplicate{importResult.skippedDuplicates !== 1 ? 's' : ''}</>
+            )}
+            .
+          </p>
+          <p className="text-sm mt-3" style={{ color: 'var(--muted)' }}>
+            Redirecting you to Participants in a moment…
+          </p>
+        </div>
+        <button
+          onClick={() => router.push('/participants')}
+          className="btn-primary px-6 py-2.5 rounded-xl text-sm font-medium"
+        >
+          Go to Participants →
+        </button>
+      </div>
+    )
   }
 
   return (
