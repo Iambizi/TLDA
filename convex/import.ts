@@ -33,13 +33,51 @@ export const executeCsvImport = mutation({
     const now = Date.now();
 
     for (const row of args.rows) {
-      const { specialData, ...parsedData } = row;
+      const { specialData, priority_weights, ...rest } = row;
       
+      // contact_info is required in the schema — use a placeholder if empty
+      const contactInfo = (rest.contact_info && String(rest.contact_info).trim()) || `imported-${Date.now()}-${Math.random().toString(36).slice(2,8)}`
+
+      // Sanitize priority_weights: Convex schema requires exactly {pedigree, looks, personality}
+      // If the weights don't conform, store them in dynamic_answers instead
+      let sanitizedWeights = undefined
+      if (priority_weights && typeof priority_weights === 'object') {
+        const w = priority_weights as Record<string, number>
+        if (typeof w.pedigree === 'number' && typeof w.looks === 'number' && typeof w.personality === 'number') {
+          sanitizedWeights = { pedigree: w.pedigree, looks: w.looks, personality: w.personality }
+        }
+      }
+
+      // Merge non-conforming weights into dynamic_answers so no data is lost
+      const dynamicAnswers = specialData?.dynamic_answers ? { ...specialData.dynamic_answers } : {}
+      if (priority_weights && !sanitizedWeights) {
+        dynamicAnswers['_priority_weights_raw'] = priority_weights
+      }
+
+      // Strip any keys not in the Convex schema (e.g. from Zod partial output)
+      const allowedParticipantKeys = new Set([
+        'full_name','contact_info','gender','age','birthday','work',
+        'dream_city','ask_out_preference','comfortable_with_man_asking_woman',
+        'comfortable_with_alcohol_meetcute','life_in_5_years','last_thing_that_made_you_laugh',
+        'dream_date','family_notes','vice_or_red_flag','dealbreaker','random_curiosities',
+        'referral_notes','values_or_worldview','priority_weights','ready_for_love','grand_amour',
+        'preferred_partner_age_min','preferred_partner_age_max','okay_with_some_deviation',
+        'has_kids','partner_has_kids','travels_world','partner_travels_world','is_divorced',
+        'partner_is_divorced','smokes_drug_friendly','partner_smokes_drug_friendly','has_tattoos',
+        'partner_has_tattoos','fitness_level','partner_fitness','close_with_family',
+        'partner_close_with_family','is_draft','dynamic_answers','photo_storage_id','updatedAt',
+      ])
+      const safeParticipantData = Object.fromEntries(
+        Object.entries(rest).filter(([k]) => allowedParticipantKeys.has(k))
+      )
+
       // 1. Insert Participant
       const participantId = await ctx.db.insert("participants", {
-        ...parsedData,
-        dealbreaker: specialData?.dealbreaker || parsedData.dealbreaker || undefined,
-        dynamic_answers: specialData?.dynamic_answers || undefined,
+        ...safeParticipantData,
+        contact_info: contactInfo,
+        dealbreaker: specialData?.dealbreaker || rest.dealbreaker || undefined,
+        priority_weights: sanitizedWeights,
+        dynamic_answers: Object.keys(dynamicAnswers).length > 0 ? dynamicAnswers : undefined,
         updatedAt: now,
       });
 
