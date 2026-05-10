@@ -28,6 +28,29 @@
 
 ---
 
+## Session 14 — 2026-05-10
+**Agent:** Antigravity
+**Phase:** v3 Refinements & Questionnaire Builder
+**Status:** ✅ Complete
+
+### What Was Done
+- **Match Management Refinements**: Added "Remove Match" capabilities to both the global and event-specific match trackers. Fixed a React bug causing the Match Logger form to crash after submission. Improved UI spacing for Participant selection fields.
+- **TypeScript Fixes**: Fixed lingering type definition errors (`v.optional`) in the CSV import script and removed stale/dead code from `import-client.tsx` that broke the `npm run build` process.
+- **Questionnaire Versioning**: Upgraded the `QuestionnaireBuilderPage` to support full version control. Added the ability to create unlimited drafts, explicitly set one questionnaire as "Live", and safely delete drafts.
+- **Data Seeding**: Migrated the "Spring 2026" CRM CSV format into a new drafted questionnaire schema while preserving the original default questionnaire as the active version.
+
+### Decisions Made
+- Re-architected `convex/questionnaires.ts` to manage multiple records instead of a single global record to support drafted application forms.
+- Re-grouped the Event page "Manage Matches" button alongside "Edit Event" for better visual hierarchy and UX.
+
+### Open Questions / Blockers
+- None.
+
+### Next Steps
+- Continue executing the remaining Matchmaking Builder features outlined in the migration brief or prepare the new "Spring 2026" questionnaire for live applicants.
+
+---
+
 ## Session 13 — 2026-05-10
 **Agent:** Antigravity
 **Phase:** v3 Data Migration
