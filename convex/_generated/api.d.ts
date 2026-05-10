@@ -10,6 +10,7 @@
 
 import type * as applications from "../applications.js";
 import type * as auth from "../auth.js";
+import type * as clearData from "../clearData.js";
 import type * as csvImport from "../csvImport.js";
 import type * as dashboard from "../dashboard.js";
 import type * as events from "../events.js";
@@ -31,6 +32,7 @@ import type {
 declare const fullApi: ApiFromModules<{
   applications: typeof applications;
   auth: typeof auth;
+  clearData: typeof clearData;
   csvImport: typeof csvImport;
   dashboard: typeof dashboard;
   events: typeof events;
