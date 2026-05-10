@@ -43,20 +43,22 @@ export default function EventPage() {
             ← Back to events
           </Link>
         </div>
-        <Link
-          href={`/events/${id}/matches`}
-          className="rounded-xl px-4 py-2 text-sm font-medium transition-all shadow-sm"
-          style={{ background: 'var(--neutral-900)', color: 'white' }}
-        >
-          View Matches
-        </Link>
-        <Link
-          href={`/events/${id}/edit`}
-          className="rounded-xl border px-4 py-2 text-sm font-medium transition-all shadow-sm"
-          style={{ borderColor: 'var(--border)', color: 'var(--neutral-700)', background: 'white' }}
-        >
-          Edit Event
-        </Link>
+        <div className="flex items-center gap-3">
+          <Link
+            href={`/events/${id}/edit`}
+            className="rounded-xl border px-4 py-2 text-sm font-medium transition-all shadow-sm hover:bg-neutral-50"
+            style={{ borderColor: 'var(--border)', color: 'var(--neutral-700)', background: 'white' }}
+          >
+            Edit Event
+          </Link>
+          <Link
+            href={`/events/${id}/matches`}
+            className="rounded-xl px-4 py-2 text-sm font-medium transition-all shadow-sm hover:opacity-90 flex items-center gap-2"
+            style={{ background: 'var(--accent)', color: 'white' }}
+          >
+            Manage Matches
+          </Link>
+        </div>
       </div>
 
       <div className="flex flex-col lg:flex-row gap-8">
