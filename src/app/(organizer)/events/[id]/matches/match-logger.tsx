@@ -93,7 +93,7 @@ export function MatchLogger({ eventId, participants }: MatchLoggerProps) {
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="flex flex-col gap-4">
         <div className="flex flex-col gap-1.5">
           <label htmlFor="participant_a_id" className="text-xs font-medium" style={{ color: 'var(--neutral-700)' }}>
             Participant A
