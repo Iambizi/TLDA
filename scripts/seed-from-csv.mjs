@@ -204,6 +204,10 @@ async function main() {
     if (row['1 thing you are fearful of for the night?']) dynamic_answers['1 thing you are fearful of for the night?'] = row['1 thing you are fearful of for the night?']
 
     const attendanceStatus = mapAttendanceStatus(row['Priority / status'])
+    if (attendanceStatus === 'cancelled' || attendanceStatus === 'waitlisted') {
+      continue
+    }
+
     const paymentAmount = parsePaid(row['PAID for snacks and drinks'])
 
     const participant = {

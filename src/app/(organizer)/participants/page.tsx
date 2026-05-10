@@ -1,5 +1,6 @@
 'use client'
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useQuery } from "convex/react";
@@ -13,6 +14,15 @@ export default function ParticipantsPage() {
   const searchParams = useSearchParams()
   const statusFilter = searchParams.get('status')
 
+  const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const PAGE_SIZE = 15;
+
+  // Reset page to 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [statusFilter, searchTerm]);
+
   const participants = useQuery(api.participants.list)
 
   if (participants === undefined) {
@@ -20,9 +30,21 @@ export default function ParticipantsPage() {
   }
 
   const filtered = participants.filter((p) => {
-    if (!statusFilter) return true;
-    return p.application?.status === statusFilter;
+    if (statusFilter && p.application?.status !== statusFilter) return false;
+    
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase();
+      const matchesName = p.full_name?.toLowerCase().includes(term);
+      const matchesContact = p.contact_info?.toLowerCase().includes(term);
+      if (!matchesName && !matchesContact) return false;
+    }
+    
+    return true;
   });
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const safePage = Math.min(currentPage, totalPages);
+  const paginated = filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
 
   return (
     <div>
@@ -61,43 +83,56 @@ export default function ParticipantsPage() {
         </div>
       </div>
 
-      {/* Filters */}
-      <div className="mb-6 flex gap-2 overflow-x-auto pb-2">
-        <Link
-          href="/participants"
-          className="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors whitespace-nowrap"
-          style={{
-            background: !statusFilter
-              ? "var(--neutral-200)"
-              : "var(--neutral-100)",
-            color: !statusFilter ? "var(--neutral-900)" : "var(--neutral-600)",
-          }}
-        >
-          All
-        </Link>
-        {Object.entries(APPLICATION_STATUS_LABELS).map(([key, label]) => {
-          const isActive = statusFilter === key;
-          const colorClass =
-            APPLICATION_STATUS_COLORS[
-              key as keyof typeof APPLICATION_STATUS_LABELS
-            ] || "bg-neutral-100 text-neutral-600";
-          return (
-            <Link
-              key={key}
-              href={`/participants?status=${key}`}
-              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${
-                isActive ? colorClass : "bg-neutral-100 text-neutral-600"
-              }`}
-              style={{
-                border: isActive
-                  ? `1px solid currentColor`
-                  : "1px solid transparent",
-              }}
-            >
-              {label}
-            </Link>
-          );
-        })}
+      {/* Filters and Search */}
+      <div className="mb-6 flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
+        <div className="flex gap-2 overflow-x-auto pb-2 max-w-full">
+          <Link
+            href="/participants"
+            className="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors whitespace-nowrap"
+            style={{
+              background: !statusFilter
+                ? "var(--neutral-200)"
+                : "var(--neutral-100)",
+              color: !statusFilter ? "var(--neutral-900)" : "var(--neutral-600)",
+            }}
+          >
+            All
+          </Link>
+          {Object.entries(APPLICATION_STATUS_LABELS).map(([key, label]) => {
+            const isActive = statusFilter === key;
+            const colorClass =
+              APPLICATION_STATUS_COLORS[
+                key as keyof typeof APPLICATION_STATUS_LABELS
+              ] || "bg-neutral-100 text-neutral-600";
+            return (
+              <Link
+                key={key}
+                href={`/participants?status=${key}`}
+                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${
+                  isActive ? colorClass : "bg-neutral-100 text-neutral-600"
+                }`}
+                style={{
+                  border: isActive
+                    ? `1px solid currentColor`
+                    : "1px solid transparent",
+                }}
+              >
+                {label}
+              </Link>
+            );
+          })}
+        </div>
+
+        <div className="w-full md:w-auto md:min-w-[250px]">
+          <input 
+            type="text"
+            placeholder="Search by name or contact..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full rounded-xl border px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-neutral-200 transition-shadow"
+            style={{ borderColor: "var(--border)", background: "var(--surface)" }}
+          />
+        </div>
       </div>
 
       {/* Table */}
@@ -147,7 +182,7 @@ export default function ParticipantsPage() {
                 </tr>
               </thead>
               <tbody>
-                {filtered.map((p, index) => {
+                {paginated.map((p, index) => {
                   const status = p.application?.status ?? 'applied'
                   const statusColorClass =
                     APPLICATION_STATUS_COLORS[status as keyof typeof APPLICATION_STATUS_COLORS] ||
@@ -216,6 +251,36 @@ export default function ParticipantsPage() {
                 })}
               </tbody>
             </table>
+          </div>
+        )}
+        
+        {/* Pagination */}
+        {filtered.length > 0 && totalPages > 1 && (
+          <div className="p-4 border-t flex flex-col sm:flex-row items-center justify-between gap-4 text-sm" style={{ borderColor: 'var(--border)', background: 'var(--neutral-50)' }}>
+            <p style={{ color: 'var(--muted)' }}>
+              Showing {(safePage - 1) * PAGE_SIZE + 1} to {Math.min(safePage * PAGE_SIZE, filtered.length)} of {filtered.length} entries
+            </p>
+            <div className="flex items-center gap-2">
+              <button 
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                disabled={safePage === 1}
+                className="px-3 py-1.5 rounded-lg border font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed hover:bg-neutral-100"
+                style={{ borderColor: 'var(--border)', color: 'var(--neutral-900)' }}
+              >
+                Previous
+              </button>
+              <div className="px-2 font-medium" style={{ color: 'var(--neutral-900)' }}>
+                Page {safePage} of {totalPages}
+              </div>
+              <button 
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                disabled={safePage === totalPages}
+                className="px-3 py-1.5 rounded-lg border font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed hover:bg-neutral-100"
+                style={{ borderColor: 'var(--border)', color: 'var(--neutral-900)' }}
+              >
+                Next
+              </button>
+            </div>
           </div>
         )}
       </div>
