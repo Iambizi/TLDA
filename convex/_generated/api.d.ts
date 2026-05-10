@@ -21,6 +21,7 @@ import type * as matches from "../matches.js";
 import type * as operations from "../operations.js";
 import type * as participants from "../participants.js";
 import type * as questionnaires from "../questionnaires.js";
+import type * as storage from "../storage.js";
 import type * as users from "../users.js";
 
 import type {
@@ -43,6 +44,7 @@ declare const fullApi: ApiFromModules<{
   operations: typeof operations;
   participants: typeof participants;
   questionnaires: typeof questionnaires;
+  storage: typeof storage;
   users: typeof users;
 }>;
 

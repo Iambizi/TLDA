@@ -28,6 +28,30 @@
 
 ---
 
+## Session 13 — 2026-05-10
+**Agent:** Antigravity
+**Phase:** v3 Data Migration
+**Status:** ✅ Complete
+
+### What Was Done
+- **Data Seeding**: Wrote a dedicated Node.js seeding script (`seed-from-csv.mjs`) to handle Liela's messy CRM data directly.
+- **Backend Mutations**: Added `clearAll` and `listEvents` mutations to properly reset data and bypass auth during seeding.
+- **Data Transformation**: Extracted `priority_weights` from unstructured notes using Regex and correctly routed notes, dealbreakers, and participant answers into `dynamic_answers`, `interviews.notes`, and `dealbreaker`.
+- **Cleanup**: Cleaned placeholders (e.g. "sent paul's email") from `contact_info` and generated valid placeholders where needed.
+- **Execution**: Successfully seeded 47 participants into Convex `participants`, `applications`, `interviews`, and `eventParticipants`.
+- **CSV Importer UI**: Added a success state to the CSV Importer (`ImportClient`) to display the import breakdown and auto-redirect to `/participants` on completion.
+
+### Decisions Made
+- Used a standalone Node script for seeding rather than a browser-based upload to handle the high volume (47 records) and complex regex-based transformation logic without browser timeout risks.
+
+### Open Questions / Blockers
+- None.
+
+### Next Steps
+- Wire the public `/apply` application form to dynamically render fields from the new active Questionnaire schema.
+
+---
+
 ## Session 12 — 2026-05-06
 **Agent:** Antigravity
 **Phase:** v3 Backend Migration & Feature Implementation

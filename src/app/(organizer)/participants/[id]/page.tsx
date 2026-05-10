@@ -7,6 +7,7 @@ import { api } from '../../../../../convex/_generated/api'
 import type { Id } from '../../../../../convex/_generated/dataModel'
 import { ReviewForm } from './review-form'
 import { DeleteParticipantCard } from './delete-participant-card'
+import { ParticipantPhoto } from './participant-photo'
 import { LIFESTYLE_ATTRIBUTES, LIFESTYLE_PREFERENCE_LABELS, READINESS_LABELS } from '@/lib/constants'
 
 function SectionHeading({ title }: { title: string }) {
@@ -95,15 +96,11 @@ export default function ParticipantPage() {
             <p className="mt-1 text-sm" style={{ color: 'var(--muted)' }}>
               Applied on {submittedAt}
             </p>
-            <div className="mt-5 flex items-center gap-4 rounded-xl border p-4" style={{ borderColor: 'var(--border)', background: 'var(--neutral-50)' }}>
-              <div className="flex h-16 w-16 items-center justify-center rounded-full text-xl font-semibold" style={{ background: 'var(--neutral-200)', color: 'var(--neutral-600)' }}>
-                {String(participant.full_name || '?').slice(0, 1).toUpperCase()}
-              </div>
-              <div>
-                <p className="text-sm font-medium" style={{ color: 'var(--neutral-900)' }}>Participant photo</p>
-                <p className="text-xs" style={{ color: 'var(--muted)' }}>Photo display will use `participants.photo_url` after the v3 storage migration.</p>
-              </div>
-            </div>
+            <ParticipantPhoto 
+              participantId={participant._id} 
+              initialName={participant.full_name} 
+              photoUrl={participant.photo_url} 
+            />
           </div>
 
           <SectionHeading title="Section 1 — Basic Info" />

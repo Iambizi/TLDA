@@ -77,12 +77,35 @@ export const getById = query({
       })
     )
 
+    const photoUrl = participant.photo_storage_id 
+      ? await ctx.storage.getUrl(participant.photo_storage_id)
+      : null
+
     return {
       ...participant,
+      photo_url: photoUrl,
       application: application ?? null,
       interviews,
       events: events.filter(Boolean),
     }
+  },
+})
+
+/**
+ * Update a participant's photo storage ID.
+ * Organizer-only.
+ */
+export const updatePhoto = mutation({
+  args: {
+    id: v.id('participants'),
+    photo_storage_id: v.union(v.id('_storage'), v.null()),
+  },
+  handler: async (ctx, args) => {
+    await requireOrganizer(ctx)
+    await ctx.db.patch(args.id, {
+      photo_storage_id: args.photo_storage_id ?? undefined,
+      updatedAt: Date.now(),
+    })
   },
 })
 
