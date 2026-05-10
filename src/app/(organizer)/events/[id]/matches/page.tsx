@@ -2,7 +2,7 @@
 
 import { notFound, useParams } from 'next/navigation'
 import Link from 'next/link'
-import { useQuery } from 'convex/react'
+import { useQuery, useMutation } from 'convex/react'
 import { api } from '../../../../../../convex/_generated/api'
 import type { Id } from '../../../../../../convex/_generated/dataModel'
 import { MatchLogger } from './match-logger'

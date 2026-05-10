@@ -195,7 +195,7 @@ async function analyzeCsvApplicantImport(input: CsvImportInput): Promise<{ heade
     return {
       rowNumber: row.rowNumber,
       rawData: row.rawData,
-      parsedData: parsed.success ? parsed.data : null,
+      parsedData: parsed.success ? (parsed.data as ApplicationFormValues) : null,
       specialData: {
         dynamic_answers: row.rawData.dynamic_answers as Record<string, unknown> | undefined,
         attendance_status: row.rawData.attendance_status as string | undefined,

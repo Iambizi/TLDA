@@ -411,20 +411,6 @@ export function ImportClient() {
           )}
         </div>
       )}
-
-      {importResult && (
-        <div
-          className="rounded-2xl border p-6 shadow-sm"
-          style={{ background: '#ecfdf5', borderColor: '#a7f3d0' }}
-        >
-          <h2 className="text-lg font-semibold mb-2" style={{ color: '#047857' }}>
-            Import Complete
-          </h2>
-          <p className="text-sm" style={{ color: '#065f46' }}>
-            Inserted {importResult.insertedCount} applicants from {importResult.totalRows} CSV rows. Skipped {importResult.skippedDuplicates} duplicates and {importResult.validationErrors} validation failures.
-          </p>
-        </div>
-      )}
     </div>
   )
 }
