@@ -34,12 +34,10 @@
 **Status:** ✅ Complete
 
 ### What Was Done
-- **Data Seeding**: Wrote a dedicated Node.js seeding script (`seed-from-csv.mjs`) to handle Liela's messy CRM data directly.
-- **Backend Mutations**: Added `clearAll` and `listEvents` mutations to properly reset data and bypass auth during seeding.
-- **Data Transformation**: Extracted `priority_weights` from unstructured notes using Regex and correctly routed notes, dealbreakers, and participant answers into `dynamic_answers`, `interviews.notes`, and `dealbreaker`.
-- **Cleanup**: Cleaned placeholders (e.g. "sent paul's email") from `contact_info` and generated valid placeholders where needed.
-- **Execution**: Successfully seeded 47 participants into Convex `participants`, `applications`, `interviews`, and `eventParticipants`.
-- **CSV Importer UI**: Added a success state to the CSV Importer (`ImportClient`) to display the import breakdown and auto-redirect to `/participants` on completion.
+- **Data Cleanup**: Updated the `seed-from-csv.mjs` script to skip rows marked as "Not available", "not single", or "Potential". Re-ran the seed script, automatically wiping the original 47 entries and inserting the precise 30 active participants.
+- **Participants UI**: Added a client-side search bar allowing organizers to filter participants by name or contact info. Added pagination controls configured to show 15 participants per page, ensuring snappy browsing.
+- **Photo Upload**: Built a `ParticipantPhoto` component that securely generates short-lived Convex Storage URLs and uploads participant avatars directly to the database.
+- **Backend Mutations**: Added `clearAll`, `listEvents`, and `updatePhoto` mutations to securely manage data seeding and file linking.
 
 ### Decisions Made
 - Used a standalone Node script for seeding rather than a browser-based upload to handle the high volume (47 records) and complex regex-based transformation logic without browser timeout risks.

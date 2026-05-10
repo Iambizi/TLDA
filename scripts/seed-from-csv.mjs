@@ -190,6 +190,17 @@ async function main() {
     const name = row['NAME']
     if (!name) continue
 
+    // Skip the remaining 4 garbage rows that lack explicit status
+    const skipNames = [
+      'Marie (friend)',
+      'Potential other women: Isa, Zainab',
+      'Sutthiphong Sieber (Not if Alicia Djouab is coming)',
+      'Naomie Hadida'
+    ]
+    if (skipNames.includes(name)) {
+      continue
+    }
+
     const connectionRaw = row['What makes you feel connected to someone?'] || ''
     const priorityWeights = extractPriorityWeights(connectionRaw)
     const dealbreaker = extractDealbreaker(connectionRaw) ||

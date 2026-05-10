@@ -84,14 +84,30 @@ export function ParticipantPhoto({
         <p className="text-xs mt-0.5" style={{ color: 'var(--muted)' }}>
           {photoUrl ? 'Click below to change the photo.' : 'No photo uploaded yet.'}
         </p>
-        <button 
-          onClick={() => fileInputRef.current?.click()}
-          disabled={isUploading}
-          className="mt-2 text-xs font-medium px-3 py-1.5 rounded-lg border hover:bg-black/5 transition-colors disabled:opacity-50"
-          style={{ borderColor: 'var(--border)', color: 'var(--neutral-900)' }}
-        >
-          {isUploading ? 'Uploading...' : photoUrl ? 'Change Photo' : 'Upload Photo'}
-        </button>
+        <div className="flex items-center gap-2 mt-2">
+          <button 
+            onClick={() => fileInputRef.current?.click()}
+            disabled={isUploading}
+            className="text-xs font-medium px-3 py-1.5 rounded-lg border hover:bg-black/5 transition-colors disabled:opacity-50"
+            style={{ borderColor: 'var(--border)', color: 'var(--neutral-900)' }}
+          >
+            {isUploading ? 'Uploading...' : photoUrl ? 'Change Photo' : 'Upload Photo'}
+          </button>
+          
+          {photoUrl && (
+            <button 
+              onClick={() => {
+                if (confirm('Are you sure you want to remove this photo?')) {
+                  updatePhoto({ id: participantId, photo_storage_id: null });
+                }
+              }}
+              disabled={isUploading}
+              className="text-xs font-medium px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50 hover:bg-red-50 text-red-600"
+            >
+              Remove
+            </button>
+          )}
+        </div>
       </div>
     </div>
   )
