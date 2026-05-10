@@ -104,3 +104,11 @@ export const logMatchOutcome = mutation({
     })
   },
 })
+
+export const removeMatchOutcome = mutation({
+  args: { id: v.id('matchOutcomes') },
+  handler: async (ctx, args) => {
+    await requireOrganizer(ctx)
+    await ctx.db.delete(args.id)
+  },
+})

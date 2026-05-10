@@ -14,6 +14,7 @@ export default function MatchesPage() {
 
   const eventData = useQuery(api.events.getById, id ? { id } : 'skip')
   const matchOutcomesRaw = useQuery(api.matches.listByEvent, id ? { eventId: id } : 'skip')
+  const removeMatch = useMutation(api.matches.removeMatchOutcome)
 
   if (eventData === undefined || matchOutcomesRaw === undefined) {
     return <div className="p-8 text-sm" style={{ color: 'var(--muted)' }}>Loading matches...</div>
@@ -78,6 +79,7 @@ export default function MatchesPage() {
                       <th className="px-6 py-4 font-medium">Participant A</th>
                       <th className="px-6 py-4 font-medium">Participant B</th>
                       <th className="px-6 py-4 font-medium">Status</th>
+                      <th className="px-6 py-4 font-medium text-right">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y" style={{ borderColor: 'var(--border)' }}>
@@ -104,6 +106,18 @@ export default function MatchesPage() {
                               </span>
                             )}
                           </div>
+                        </td>
+                        <td className="px-6 py-4 text-right">
+                          <button
+                            onClick={async () => {
+                              if (confirm('Are you sure you want to delete this match outcome?')) {
+                                await removeMatch({ id: match.id as Id<'matchOutcomes'> })
+                              }
+                            }}
+                            className="text-xs font-medium px-3 py-1.5 rounded-lg transition-colors hover:bg-red-50 text-red-600"
+                          >
+                            Remove
+                          </button>
                         </td>
                       </tr>
                     ))}

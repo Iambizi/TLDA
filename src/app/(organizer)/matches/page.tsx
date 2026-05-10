@@ -1,12 +1,14 @@
 'use client'
 
 import Link from 'next/link'
-import { useQuery } from 'convex/react'
+import { useQuery, useMutation } from 'convex/react'
 import { api } from '../../../../convex/_generated/api'
+import type { Id } from '../../../../convex/_generated/dataModel'
 import { INTEREST_STATUS_LABELS } from '@/lib/constants'
 
 export default function GlobalMatchesPage() {
   const matchesRaw = useQuery(api.matches.listAll)
+  const removeMatch = useMutation(api.matches.removeMatchOutcome)
 
   if (matchesRaw === undefined) {
     return <div className="p-8 text-sm" style={{ color: 'var(--muted)' }}>Loading matches...</div>
@@ -57,6 +59,7 @@ export default function GlobalMatchesPage() {
                 <th className="px-6 py-4 font-medium">Status</th>
                 <th className="px-6 py-4 font-medium">Notes</th>
                 <th className="px-6 py-4 font-medium text-right">Logged</th>
+                <th className="px-6 py-4 font-medium text-right">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -79,6 +82,18 @@ export default function GlobalMatchesPage() {
                   </td>
                   <td className="px-6 py-4 max-w-sm truncate" style={{ color: 'var(--muted)' }}>{match.notes || '—'}</td>
                   <td className="px-6 py-4 text-right" style={{ color: 'var(--muted)' }}>{match.date}</td>
+                  <td className="px-6 py-4 text-right">
+                    <button
+                      onClick={async () => {
+                        if (confirm('Are you sure you want to delete this match outcome?')) {
+                          await removeMatch({ id: match.id as Id<'matchOutcomes'> })
+                        }
+                      }}
+                      className="text-xs font-medium px-3 py-1.5 rounded-lg transition-colors hover:bg-red-50 text-red-600"
+                    >
+                      Remove
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>

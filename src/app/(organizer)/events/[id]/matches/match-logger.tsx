@@ -38,7 +38,8 @@ export function MatchLogger({ eventId, participants }: MatchLoggerProps) {
     setError(null)
     setSuccess(false)
 
-    const formData = new FormData(e.currentTarget)
+    const form = e.currentTarget
+    const formData = new FormData(form)
     const participant_a_id = formData.get('participant_a_id') as string
     const participant_b_id = formData.get('participant_b_id') as string
     const interest_status = formData.get('connection_status') as string
@@ -53,7 +54,7 @@ export function MatchLogger({ eventId, participants }: MatchLoggerProps) {
         organizer_notes: organizer_notes || undefined,
       })
       setSuccess(true)
-      e.currentTarget.reset()
+      form.reset()
     } catch (err: any) {
       setError(err.message)
     } finally {

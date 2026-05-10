@@ -58,13 +58,12 @@ export const INTERVIEW_OUTCOME_LABELS: Record<InterviewOutcome, string> = {
   follow_up_needed: 'Follow-up Needed',
 }
 
-export const INTEREST_STATUS_LABELS: Record<InterestStatus, string> = {
-  potential_match: 'Potential Match',
-  one_sided_interest: 'One-sided Interest',
-  mutual_interest: 'Mutual Interest',
-  no_match: 'No Match',
-  follow_up_needed: 'Follow-up Needed',
-  introduced_off_platform: 'Introduced Off Platform',
+export const INTEREST_STATUS_LABELS: Record<string, string> = {
+  connected: 'Connected',
+  exchanged_contacts: 'Exchanged Contacts',
+  went_on_date: 'Went on a Date',
+  in_relationship: 'In a Relationship',
+  no_follow_up: 'No Follow-Up',
 }
 
 export const READINESS_LABELS: Record<ReadinessForLove, string> = {
