@@ -13,23 +13,24 @@ export default function OrganizerGuidePage() {
       </div>
 
       <div className="space-y-8">
-        {/* Section 1: Application Intake */}
+        {/* Section 1: Questionnaire Builder */}
         <section className="rounded-2xl border p-8 shadow-sm" style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
           <div className="flex items-center gap-3 mb-4">
             <span className="flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold bg-neutral-100 text-neutral-800">1</span>
-            <h2 className="text-xl font-semibold" style={{ color: 'var(--neutral-900)' }}>The Application Intake</h2>
+            <h2 className="text-xl font-semibold" style={{ color: 'var(--neutral-900)' }}>Questionnaire Builder</h2>
           </div>
           <div className="space-y-4" style={{ color: 'var(--neutral-700)' }}>
             <p>
-              Everything starts with the <Link href="/settings/questionnaire" className="font-semibold text-neutral-900 hover:underline decoration-brand-500 underline-offset-4">Questionnaire Builder</Link>. Before you announce a new event or start driving traffic to the website, ensure your application form is ready.
+              Before you can accept applications, you need to configure your intake form using the <Link href="/settings/questionnaire" className="font-semibold text-neutral-900 hover:underline decoration-brand-500 underline-offset-4">Questionnaire Builder</Link>.
             </p>
             <ul className="list-disc pl-5 space-y-2 text-sm leading-relaxed">
-              <li>Navigate to <Link href="/settings/questionnaire" className="font-semibold text-neutral-900 hover:underline decoration-brand-500 underline-offset-4">Questionnaire</Link> to manage your application schemas.</li>
-              <li>You can create multiple <strong>Drafts</strong> for future events without breaking the live site.</li>
-              <li>When you are ready to accept new applicants, select your desired draft and click <strong>"Set as Live"</strong>. This instantly updates the public <code>/apply</code> page.</li>
+              <li>You can create unlimited <strong>Drafts</strong>. Each draft is divided into three fixed pages: <em>Basic Info</em>, <em>About You</em>, and <em>Ideal Partner</em>.</li>
+              <li>While <em>Basic Info</em> asks for standard demographic data, you have full control to add, edit, or delete dynamic custom questions in the <em>About You</em> and <em>Ideal Partner</em> sections.</li>
+              <li>Changes are auto-saved to your draft. You can build a draft over several days without breaking the public site.</li>
+              <li>When your questionnaire is finalized, select your draft and click <strong>"Set as Live"</strong>. This instantly updates the public <code>/apply</code> page for all new applicants.</li>
             </ul>
             <p className="text-sm mt-4 italic" style={{ color: 'var(--muted)' }}>
-              Note: Once an applicant submits a form, they will appear in your <Link href="/participants" className="font-semibold text-neutral-900 hover:underline decoration-brand-500 underline-offset-4">Participants</Link> tab.
+              Note: Once an applicant submits a live form, their answers will be securely routed to your <Link href="/participants" className="font-semibold text-neutral-900 hover:underline decoration-brand-500 underline-offset-4">Participants</Link> database.
             </p>
           </div>
         </section>
