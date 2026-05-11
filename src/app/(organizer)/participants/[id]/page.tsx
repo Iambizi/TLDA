@@ -55,7 +55,15 @@ export default function ParticipantPage() {
   }
 
   if (participant === null) {
-    notFound()
+    return (
+      <div className="p-8 text-center mt-10">
+        <h2 className="text-xl font-semibold mb-2">Participant Not Found</h2>
+        <p className="text-sm mb-4" style={{ color: 'var(--neutral-500)' }}>This participant may have been deleted.</p>
+        <Link href="/participants" className="text-sm font-medium hover:underline" style={{ color: 'var(--accent)' }}>
+          ← Return to directory
+        </Link>
+      </div>
+    )
   }
 
   const { application, interviews } = participant
