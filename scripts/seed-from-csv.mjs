@@ -109,7 +109,9 @@ function parseGender(raw) {
 
 function parsePaid(raw) {
   if (!raw) return undefined
-  return /yes|y|oui/i.test(String(raw)) ? 50 : undefined
+  // Events are currently free/contribution-based. We no longer force a $50 payment.
+  // We just return undefined. If a user contributes, the organizer will manually log it.
+  return undefined
 }
 
 // ── CSV Parser ───────────────────────────────────────────────────────────────

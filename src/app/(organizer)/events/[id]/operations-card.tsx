@@ -85,9 +85,9 @@ export function OperationsCard({ eventId, roster, expenses, incomes = [] }: Oper
 
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
         
-        {/* Participant Payments */}
+        {/* Participant Contributions */}
         <div className="rounded-xl border p-4 flex flex-col" style={{ borderColor: 'var(--border)' }}>
-          <h3 className="mb-3 text-sm font-semibold" style={{ color: 'var(--neutral-900)' }}>Participant Payments</h3>
+          <h3 className="mb-3 text-sm font-semibold" style={{ color: 'var(--neutral-900)' }}>Participant Contributions</h3>
           <div className="flex flex-col gap-2 max-h-48 overflow-y-auto pr-2 flex-1">
             {roster.length === 0 ? (
               <p className="text-xs italic" style={{ color: 'var(--muted)' }}>No participants on roster.</p>
