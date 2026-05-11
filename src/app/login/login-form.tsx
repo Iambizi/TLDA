@@ -7,6 +7,7 @@ export function LoginForm() {
   const { signIn } = useAuthActions()
   const [error, setError] = useState<string | null>(null)
   const [pending, setPending] = useState(false)
+  const [isSignUp, setIsSignUp] = useState(false)
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -18,9 +19,9 @@ export function LoginForm() {
     const password = formData.get('password') as string
 
     try {
-      await signIn('password', { email, password, flow: 'signIn' })
+      await signIn('password', { email, password, flow: isSignUp ? 'signUp' : 'signIn' })
     } catch (err) {
-      setError('Invalid credentials. Please try again.')
+      setError(isSignUp ? 'Could not create account. Please try again.' : 'Invalid credentials. Please try again.')
     } finally {
       setPending(false)
     }
@@ -78,7 +79,7 @@ export function LoginForm() {
           id="login-password"
           name="password"
           type="password"
-          autoComplete="current-password"
+          autoComplete={isSignUp ? "new-password" : "current-password"}
           required
           placeholder="••••••••"
           className="w-full rounded-xl border px-4 py-2.5 text-sm outline-none transition-all"
@@ -98,7 +99,17 @@ export function LoginForm() {
         className="w-full rounded-xl py-2.5 text-sm font-medium text-white transition-all disabled:opacity-60"
         style={{ background: pending ? 'var(--neutral-400)' : 'var(--accent)' }}
       >
-        {pending ? 'Signing in…' : 'Sign in'}
+        {pending ? (isSignUp ? 'Creating account…' : 'Signing in…') : (isSignUp ? 'Create Account' : 'Sign in')}
+      </button>
+
+      {/* Toggle Sign Up */}
+      <button
+        type="button"
+        onClick={() => setIsSignUp(!isSignUp)}
+        className="text-xs text-center hover:underline mt-2"
+        style={{ color: 'var(--muted)' }}
+      >
+        {isSignUp ? 'Already have an account? Sign in' : 'Need to create an account? Sign up'}
       </button>
     </form>
   )
