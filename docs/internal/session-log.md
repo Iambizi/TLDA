@@ -40,9 +40,14 @@
 - **Global Styling Update**: Removed harsh `divide-y` borders from all tables across the app (Participants, Events, Matches, Import, Operations) and replaced them with softer inset `box-shadow` styles for a cohesive, modern UI.
 - **Layout Expansion**: Increased the `max-width` constraint on the Event Details page from `max-w-5xl` to `max-w-7xl` to comfortably accommodate the expanded 3-column Operations panel.
 - **UX Polish**: Renamed "Participant Payments" to "Participant Contributions" across the UI and removed the hardcoded $50 payment default from the CSV seed script since events are currently contribution-based. Fixed multiple flexbox layout issues in the Operations card to prevent inputs from overlapping or squishing participant names.
+- **Production Deployment**: Successfully deployed the full-stack application to Vercel and Convex Production. Configured necessary environment variables (`NEXT_PUBLIC_CONVEX_URL`, `AUTH_SECRET`, `SITE_URL`) and initialized Convex Auth production keys.
+- **Production Data Seeding**: Successfully migrated local event data to production by running the CSV seed script against the live Convex instance, populating the database with 30 participants and linking them to a new production event.
+- **Bug Fixes**: Resolved a critical issue where deleting a participant would trigger a Next.js `notFound()` error boundary and crash the router before the redirect could complete. Replaced with a graceful UI fallback.
+- **Organizer Guide Expansion**: Added a detailed section explaining the Questionnaire Builder workflow, covering drafts, dynamic fields, and the "Set as Live" publishing process.
 
 ### Decisions Made
 - Added a dedicated `eventIncomes` table to `convex/schema.ts` instead of repurposing the `eventExpenses` table to ensure clean separation of revenue and cost tracking.
+- Temporarily enabled "Sign Up" flow in production to allow the primary admin to register, then immediately disabled it to maintain "Invite Only" security.
 
 ### Open Questions / Blockers
 - None.
