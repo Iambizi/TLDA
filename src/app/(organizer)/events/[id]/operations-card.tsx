@@ -93,8 +93,10 @@ export function OperationsCard({ eventId, roster, expenses, incomes = [] }: Oper
               <p className="text-xs italic" style={{ color: 'var(--muted)' }}>No participants on roster.</p>
             ) : roster.map(p => (
               <div key={p.participant_id} className="flex justify-between items-center py-1 border-b last:border-0" style={{ borderColor: 'var(--border)' }}>
-                <span className="text-xs truncate max-w-[120px]" style={{ color: 'var(--neutral-800)' }}>{p.participant?.full_name || 'Unknown'}</span>
-                <div className="flex items-center gap-1">
+                <span className="text-xs truncate flex-1 mr-2" style={{ color: 'var(--neutral-800)' }} title={p.participant?.full_name || 'Unknown'}>
+                  {p.participant?.full_name || 'Unknown'}
+                </span>
+                <div className="flex items-center gap-1 shrink-0">
                   <span className="text-xs" style={{ color: 'var(--muted)' }}>$</span>
                   <input
                     type="number"
