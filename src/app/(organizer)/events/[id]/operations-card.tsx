@@ -125,26 +125,28 @@ export function OperationsCard({ eventId, roster, expenses, incomes = [] }: Oper
           </div>
           
           {isAddingIncome && (
-            <form onSubmit={handleAddIncome} className="mb-3 flex gap-2">
+            <form onSubmit={handleAddIncome} className="mb-3 flex flex-col gap-2">
               <input
                 type="text"
                 placeholder="Description"
                 value={incomeDesc}
                 onChange={e => setIncomeDesc(e.target.value)}
-                className="form-input text-xs flex-1"
+                className="form-input text-xs w-full"
                 required
               />
-              <input
-                type="number"
-                placeholder="0.00"
-                value={incomeAmount}
-                onChange={e => setIncomeAmount(e.target.value)}
-                className="form-input text-xs w-20"
-                step="0.01"
-                min="0"
-                required
-              />
-              <button type="submit" className="rounded-md bg-neutral-900 px-3 text-xs text-white">Save</button>
+              <div className="flex gap-2">
+                <input
+                  type="number"
+                  placeholder="0.00"
+                  value={incomeAmount}
+                  onChange={e => setIncomeAmount(e.target.value)}
+                  className="form-input text-xs flex-1"
+                  step="0.01"
+                  min="0"
+                  required
+                />
+                <button type="submit" className="rounded-md bg-neutral-900 px-3 text-xs text-white">Save</button>
+              </div>
             </form>
           )}
 
@@ -177,26 +179,28 @@ export function OperationsCard({ eventId, roster, expenses, incomes = [] }: Oper
           </div>
           
           {isAddingExpense && (
-            <form onSubmit={handleAddExpense} className="mb-3 flex gap-2">
+            <form onSubmit={handleAddExpense} className="mb-3 flex flex-col gap-2">
               <input
                 type="text"
                 placeholder="Description"
                 value={desc}
                 onChange={e => setDesc(e.target.value)}
-                className="form-input text-xs flex-1"
+                className="form-input text-xs w-full"
                 required
               />
-              <input
-                type="number"
-                placeholder="0.00"
-                value={amount}
-                onChange={e => setAmount(e.target.value)}
-                className="form-input text-xs w-20"
-                step="0.01"
-                min="0"
-                required
-              />
-              <button type="submit" className="rounded-md bg-neutral-900 px-3 text-xs text-white">Save</button>
+              <div className="flex gap-2">
+                <input
+                  type="number"
+                  placeholder="0.00"
+                  value={amount}
+                  onChange={e => setAmount(e.target.value)}
+                  className="form-input text-xs flex-1"
+                  step="0.01"
+                  min="0"
+                  required
+                />
+                <button type="submit" className="rounded-md bg-neutral-900 px-3 text-xs text-white">Save</button>
+              </div>
             </form>
           )}
 
