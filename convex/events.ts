@@ -78,7 +78,12 @@ export const getById = query({
       .withIndex('by_event', (q) => q.eq('event_id', args.id))
       .collect()
 
-    return { ...event, roster: rosterWithParticipants, availableParticipants, expenses }
+    const incomes = await ctx.db
+      .query('eventIncomes')
+      .withIndex('by_event', (q) => q.eq('event_id', args.id))
+      .collect()
+
+    return { ...event, roster: rosterWithParticipants, availableParticipants, expenses, incomes }
   },
 })
 
@@ -285,5 +290,30 @@ export const updatePaymentAmount = mutation({
     if (!row) throw new Error('Participant not found in event roster.')
 
     await ctx.db.patch(row._id, { payment_amount: args.amount })
+  },
+})
+
+export const addIncome = mutation({
+  args: {
+    eventId: v.id('events'),
+    description: v.string(),
+    amount: v.number(),
+  },
+  handler: async (ctx, args) => {
+    await requireOrganizer(ctx)
+    await ctx.db.insert('eventIncomes', {
+      event_id: args.eventId,
+      description: args.description,
+      amount: args.amount,
+      updatedAt: Date.now(),
+    })
+  },
+})
+
+export const removeIncome = mutation({
+  args: { incomeId: v.id('eventIncomes') },
+  handler: async (ctx, args) => {
+    await requireOrganizer(ctx)
+    await ctx.db.delete(args.incomeId)
   },
 })

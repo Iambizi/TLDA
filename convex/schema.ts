@@ -226,4 +226,13 @@ export default defineSchema({
     updatedAt: v.number(),
   })
     .index('by_event', ['event_id']),
+
+  // ─── eventIncomes ───────────────────────────────────────────
+  eventIncomes: defineTable({
+    event_id: v.id('events'),
+    description: v.string(),
+    amount: v.number(),
+    updatedAt: v.number(),
+  })
+    .index('by_event', ['event_id']),
 })

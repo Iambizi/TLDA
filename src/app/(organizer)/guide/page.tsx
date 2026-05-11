@@ -91,6 +91,7 @@ export default function OrganizerGuidePage() {
               <li>Every event page has a dedicated <strong>Operations</strong> panel.</li>
               <li>You can log ad-hoc <strong>Expenses</strong> (e.g., "Venue Rental", "Catering").</li>
               <li>You can log <strong>Participant Payments</strong> (e.g., ticket fees) for anyone assigned to the roster.</li>
+              <li>You can log generic <strong>Other Income</strong> (e.g., "Sponsorship", "Bar Split") that isn't tied to a specific attendee.</li>
               <li>The global <Link href="/operations" className="font-semibold text-neutral-900 hover:underline decoration-brand-500 underline-offset-4">Operations</Link> tab in the sidebar aggregates all expenses and revenues across all events to show you your total Net Profit over time.</li>
             </ul>
           </div>

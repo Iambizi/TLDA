@@ -35,7 +35,17 @@ export const getDashboardData = query({
 
         const eventCosts = expenses.reduce((sum, exp) => sum + exp.amount, 0)
 
-        globalRevenue += eventRevenue
+        // Get Incomes
+        const incomes = await ctx.db
+          .query('eventIncomes')
+          .withIndex('by_event', (q) => q.eq('event_id', e._id))
+          .collect()
+
+        const eventIncomes = incomes.reduce((sum, inc) => sum + inc.amount, 0)
+        
+        const totalEventRevenue = eventRevenue + eventIncomes
+
+        globalRevenue += totalEventRevenue
         globalCosts += eventCosts
 
         return {
@@ -44,9 +54,9 @@ export const getDashboardData = query({
           status: e.status,
           date: e.event_date,
           participantCount: roster.length,
-          revenue: eventRevenue,
+          revenue: totalEventRevenue,
           costs: eventCosts,
-          net: eventRevenue - eventCosts,
+          net: totalEventRevenue - eventCosts,
         }
       })
     )

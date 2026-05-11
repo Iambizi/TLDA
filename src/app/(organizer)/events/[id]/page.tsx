@@ -25,7 +25,7 @@ export default function EventPage() {
     notFound()
   }
 
-  const { roster, availableParticipants, expenses, ...event } = data
+  const { roster, availableParticipants, expenses, incomes, ...event } = data
 
   const dateStr = event.event_date 
     ? new Date(event.event_date).toLocaleString('en-US', { dateStyle: 'full', timeStyle: 'short' }) 
@@ -105,7 +105,7 @@ export default function EventPage() {
             )}
           </div>
 
-          <OperationsCard eventId={event._id} roster={roster} expenses={expenses} />
+          <OperationsCard eventId={event._id} roster={roster} expenses={expenses} incomes={incomes} />
 
           <h2 className="text-xl font-semibold mb-4" style={{ color: 'var(--neutral-900)' }}>
             Event Roster
