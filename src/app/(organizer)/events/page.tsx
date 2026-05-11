@@ -64,10 +64,14 @@ export default function EventsPage() {
                   <th className="px-6 py-4 font-medium text-right">Roster Size</th>
                 </tr>
               </thead>
-              <tbody className="divide-y" style={{ borderColor: 'var(--border)' }}>
-                {formattedEvents.map((ev) => {
+              <tbody>
+                {formattedEvents.map((ev, index) => {
                   return (
-                    <tr key={ev.id} className="hover:bg-neutral-50/50 transition-colors">
+                    <tr 
+                      key={ev.id} 
+                      className="hover:bg-neutral-50/50 transition-colors"
+                      style={index === 0 ? undefined : { boxShadow: 'inset 0 1px 0 rgba(148, 163, 184, 0.14)' }}
+                    >
                       <td className="px-6 py-4">
                         <Link 
                           href={`/events/${ev.id}`}

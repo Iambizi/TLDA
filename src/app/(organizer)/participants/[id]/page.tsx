@@ -145,15 +145,19 @@ export default function ParticipantPage() {
                     <th className="px-4 py-3 font-medium">Prefers Partner</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y" style={{ borderColor: 'var(--border)' }}>
-                  {LIFESTYLE_ATTRIBUTES.map((attr) => {
+                <tbody>
+                  {LIFESTYLE_ATTRIBUTES.map((attr, index) => {
                     const selfVal = participant[attr.self as keyof typeof participant] as string
                     const partnerVal = participant[attr.partner as keyof typeof participant] as string
                     
                     if (!selfVal && !partnerVal) return null
                     
                     return (
-                      <tr key={attr.self} className="hover:bg-neutral-50/50">
+                      <tr 
+                        key={attr.self} 
+                        className="hover:bg-neutral-50/50"
+                        style={index === 0 ? undefined : { boxShadow: 'inset 0 1px 0 rgba(148, 163, 184, 0.14)' }}
+                      >
                         <td className="px-4 py-3 font-medium" style={{ color: 'var(--neutral-800)' }}>{attr.label}</td>
                         <td className="px-4 py-3" style={{ color: 'var(--neutral-600)' }}>{selfVal ? LIFESTYLE_PREFERENCE_LABELS[selfVal as keyof typeof LIFESTYLE_PREFERENCE_LABELS] : '—'}</td>
                         <td className="px-4 py-3" style={{ color: 'var(--neutral-600)' }}>{partnerVal ? LIFESTYLE_PREFERENCE_LABELS[partnerVal as keyof typeof LIFESTYLE_PREFERENCE_LABELS] : '—'}</td>

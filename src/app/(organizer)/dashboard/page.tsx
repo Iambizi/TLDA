@@ -145,12 +145,16 @@ export default function DashboardPage() {
                         <th className="px-6 py-4 text-right">Applied</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y" style={{ borderColor: 'var(--border)' }}>
-                      {recentSubmissions.map((app) => {
+                    <tbody>
+                      {recentSubmissions.map((app, index) => {
                         const date = new Date(app.submitted_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
                         
                         return (
-                          <tr key={app._id} className="hover:bg-neutral-50/50 transition-colors">
+                          <tr 
+                            key={app._id} 
+                            className="hover:bg-neutral-50/50 transition-colors"
+                            style={index === 0 ? undefined : { boxShadow: 'inset 0 1px 0 rgba(148, 163, 184, 0.14)' }}
+                          >
                             <td className="px-6 py-4">
                               <Link 
                                 href={`/participants/${app.participant_id}`}

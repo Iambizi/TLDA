@@ -82,9 +82,13 @@ export default function MatchesPage() {
                       <th className="px-6 py-4 font-medium text-right">Actions</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y" style={{ borderColor: 'var(--border)' }}>
-                    {matchOutcomes.map((match) => (
-                      <tr key={match.id} className="hover:bg-neutral-50/50 transition-colors">
+                  <tbody>
+                    {matchOutcomes.map((match, index) => (
+                      <tr 
+                        key={match.id} 
+                        className="hover:bg-neutral-50/50 transition-colors"
+                        style={index === 0 ? undefined : { boxShadow: 'inset 0 1px 0 rgba(148, 163, 184, 0.14)' }}
+                      >
                         <td className="px-6 py-4 font-medium" style={{ color: 'var(--neutral-900)' }}>
                           <Link href={`/participants/${match.participant_a.id}`} className="hover:underline">
                             {match.participant_a.name}
