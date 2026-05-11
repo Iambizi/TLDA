@@ -1,3 +1,5 @@
+import Link from 'next/link'
+
 export default function OrganizerGuidePage() {
   return (
     <div className="max-w-4xl pb-12">
@@ -19,15 +21,15 @@ export default function OrganizerGuidePage() {
           </div>
           <div className="space-y-4" style={{ color: 'var(--neutral-700)' }}>
             <p>
-              Everything starts with the <strong>Questionnaire Builder</strong>. Before you announce a new event or start driving traffic to the website, ensure your application form is ready.
+              Everything starts with the <Link href="/settings/questionnaire" className="font-semibold text-neutral-900 hover:underline decoration-brand-500 underline-offset-4">Questionnaire Builder</Link>. Before you announce a new event or start driving traffic to the website, ensure your application form is ready.
             </p>
             <ul className="list-disc pl-5 space-y-2 text-sm leading-relaxed">
-              <li>Navigate to <span className="font-semibold text-neutral-900">Questionnaire</span> to manage your application schemas.</li>
+              <li>Navigate to <Link href="/settings/questionnaire" className="font-semibold text-neutral-900 hover:underline decoration-brand-500 underline-offset-4">Questionnaire</Link> to manage your application schemas.</li>
               <li>You can create multiple <strong>Drafts</strong> for future events without breaking the live site.</li>
               <li>When you are ready to accept new applicants, select your desired draft and click <strong>"Set as Live"</strong>. This instantly updates the public <code>/apply</code> page.</li>
             </ul>
             <p className="text-sm mt-4 italic" style={{ color: 'var(--muted)' }}>
-              Note: Once an applicant submits a form, they will appear in your <strong>Participants</strong> tab.
+              Note: Once an applicant submits a form, they will appear in your <Link href="/participants" className="font-semibold text-neutral-900 hover:underline decoration-brand-500 underline-offset-4">Participants</Link> tab.
             </p>
           </div>
         </section>
@@ -43,7 +45,7 @@ export default function OrganizerGuidePage() {
               Once you have a pool of interested applicants, you can set up a new Event to group them together.
             </p>
             <ul className="list-disc pl-5 space-y-2 text-sm leading-relaxed">
-              <li>Navigate to <span className="font-semibold text-neutral-900">Events</span> and click <strong>Create Event</strong>.</li>
+              <li>Navigate to <Link href="/events" className="font-semibold text-neutral-900 hover:underline decoration-brand-500 underline-offset-4">Events</Link> and click <strong>Create Event</strong>.</li>
               <li>Assign a date, time, and location.</li>
               <li>Under the <strong>Event Roster</strong> section of your new event, select the specific participants from your database that you want to invite to this event.</li>
             </ul>
@@ -70,7 +72,7 @@ export default function OrganizerGuidePage() {
               <li>You can set a <strong>Follow-up Date</strong> to remind yourself to check in with them via email/SMS later.</li>
             </ul>
             <p className="text-sm mt-4">
-              You can view a global overview of <em>all</em> historical matches across all events by clicking the <strong>Matches</strong> tab in the main sidebar.
+              You can view a global overview of <em>all</em> historical matches across all events by clicking the <Link href="/matches" className="font-semibold text-neutral-900 hover:underline decoration-brand-500 underline-offset-4">Matches</Link> tab in the main sidebar.
             </p>
           </div>
         </section>
@@ -89,7 +91,7 @@ export default function OrganizerGuidePage() {
               <li>Every event page has a dedicated <strong>Operations</strong> panel.</li>
               <li>You can log ad-hoc <strong>Expenses</strong> (e.g., "Venue Rental", "Catering").</li>
               <li>You can log <strong>Participant Payments</strong> (e.g., ticket fees) for anyone assigned to the roster.</li>
-              <li>The global <span className="font-semibold text-neutral-900">Operations</span> tab in the sidebar aggregates all expenses and revenues across all events to show you your total Net Profit over time.</li>
+              <li>The global <Link href="/operations" className="font-semibold text-neutral-900 hover:underline decoration-brand-500 underline-offset-4">Operations</Link> tab in the sidebar aggregates all expenses and revenues across all events to show you your total Net Profit over time.</li>
             </ul>
           </div>
         </section>

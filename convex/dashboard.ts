@@ -16,9 +16,11 @@ export const summary = query({
   handler: async (ctx) => {
     await requireOrganizer(ctx)
 
-    const [allApplications, allEvents] = await Promise.all([
+    const [allApplications, allEvents, allMatches, activeQ] = await Promise.all([
       ctx.db.query('applications').collect(),
       ctx.db.query('events').collect(),
+      ctx.db.query('matchOutcomes').collect(),
+      ctx.db.query('questionnaires').filter(q => q.eq(q.field('is_active'), true)).first(),
     ])
 
     // Count by application status
@@ -40,14 +42,14 @@ export const summary = query({
     )
 
     const now = Date.now()
-    const upcomingEvents = allEvents
+    const upcomingEventsList = allEvents
       .filter(
         (e) =>
           (e.status === 'open' || e.status === 'draft') &&
           (!e.event_date || e.event_date >= now)
       )
       .sort((a, b) => (a.event_date ?? 0) - (b.event_date ?? 0))
-      .slice(0, 5)
+      .slice(0, 3) // Get the next 3 events
 
     const pendingReview = (statusCounts['applied'] || 0) + (statusCounts['under_review'] || 0)
     
@@ -58,7 +60,10 @@ export const summary = query({
       totalApplications: allApplications.length,
       pendingReview,
       newThisWeek,
-      upcomingEvents: upcomingEvents.length,
+      upcomingEvents: upcomingEventsList.length,
+      upcomingEventsList,
+      totalMatches: allMatches.length,
+      hasActiveQuestionnaire: !!activeQ,
       statusCounts,
       recentSubmissions: recentWithParticipants,
     }
