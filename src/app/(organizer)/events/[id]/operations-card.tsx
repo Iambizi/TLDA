@@ -102,7 +102,7 @@ export function OperationsCard({ eventId, roster, expenses, incomes = [] }: Oper
                     type="number"
                     defaultValue={p.payment_amount || ''}
                     onBlur={(e) => handleUpdatePayment(p.participant_id, e.target.value)}
-                    className="form-input text-xs w-20 px-2 py-1"
+                    className="form-input text-xs px-2 py-1 !w-20"
                     placeholder="0.00"
                     step="0.01"
                     min="0"
