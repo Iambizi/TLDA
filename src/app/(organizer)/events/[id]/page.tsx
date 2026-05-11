@@ -32,7 +32,7 @@ export default function EventPage() {
     : 'TBD'
 
   return (
-    <div className="max-w-5xl">
+    <div className="max-w-7xl">
       <div className="mb-6 flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Link
