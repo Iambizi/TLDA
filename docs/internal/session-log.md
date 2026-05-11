@@ -39,6 +39,7 @@
 - **Operations & General Income**: Upgraded the `OperationsCard` and backend schema to track "Other Income" (e.g. sponsorships, bar splits) independent of participant ticket sales. Updated the global operations aggregator to factor in these generic revenue streams.
 - **Global Styling Update**: Removed harsh `divide-y` borders from all tables across the app (Participants, Events, Matches, Import, Operations) and replaced them with softer inset `box-shadow` styles for a cohesive, modern UI.
 - **Layout Expansion**: Increased the `max-width` constraint on the Event Details page from `max-w-5xl` to `max-w-7xl` to comfortably accommodate the expanded 3-column Operations panel.
+- **UX Polish**: Renamed "Participant Payments" to "Participant Contributions" across the UI and removed the hardcoded $50 payment default from the CSV seed script since events are currently contribution-based. Fixed multiple flexbox layout issues in the Operations card to prevent inputs from overlapping or squishing participant names.
 
 ### Decisions Made
 - Added a dedicated `eventIncomes` table to `convex/schema.ts` instead of repurposing the `eventExpenses` table to ensure clean separation of revenue and cost tracking.
