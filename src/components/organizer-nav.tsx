@@ -13,6 +13,7 @@ const NAV_ITEMS = [
   { href: '/matches', label: 'Matches', icon: '💞' },
   { href: '/operations', label: 'Operations', icon: '💰' },
   { href: '/settings/questionnaire', label: 'Questionnaire', icon: '📝' },
+  { href: '/guide', label: 'Guide', icon: '📖' },
 ]
 
 export function OrganizerNav() {
