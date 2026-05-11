@@ -28,6 +28,29 @@
 
 ---
 
+## Session 15 — 2026-05-11
+**Agent:** Antigravity
+**Phase:** UX Polish & Dashboard Redesign
+**Status:** ✅ Complete
+
+### What Was Done
+- **Dashboard Redesign**: Completely overhauled the `/dashboard` page into an operational nerve center. Added top metric cards (Total Applications, Pending Review, Upcoming Events, Matches Made), a Quick Actions widget for common flows, an Upcoming Events feed, and a Pipeline Breakdown section.
+- **Organizer Guide Integration**: Updated the Organizer Guide (`/guide`) to include hyperlinked navigation directly to the tools and pages mentioned in the documentation, improving usability.
+- **Operations & General Income**: Upgraded the `OperationsCard` and backend schema to track "Other Income" (e.g. sponsorships, bar splits) independent of participant ticket sales. Updated the global operations aggregator to factor in these generic revenue streams.
+- **Global Styling Update**: Removed harsh `divide-y` borders from all tables across the app (Participants, Events, Matches, Import, Operations) and replaced them with softer inset `box-shadow` styles for a cohesive, modern UI.
+- **Layout Expansion**: Increased the `max-width` constraint on the Event Details page from `max-w-5xl` to `max-w-7xl` to comfortably accommodate the expanded 3-column Operations panel.
+
+### Decisions Made
+- Added a dedicated `eventIncomes` table to `convex/schema.ts` instead of repurposing the `eventExpenses` table to ensure clean separation of revenue and cost tracking.
+
+### Open Questions / Blockers
+- None.
+
+### Next Steps
+- Continue with user-requested enhancements or prepare for production deployment.
+
+---
+
 ## Session 14 — 2026-05-10
 **Agent:** Antigravity
 **Phase:** v3 Refinements & Questionnaire Builder
