@@ -23,15 +23,11 @@ export const list = query({
   handler: async (ctx) => {
     await requireOrganizer(ctx)
     const events = await ctx.db.query('events').order('desc').collect()
-    return await Promise.all(
-      events.map(async (e) => {
-        const roster = await ctx.db
-          .query('eventParticipants')
-          .withIndex('by_event', (q) => q.eq('event_id', e._id))
-          .collect()
-        return { ...e, rosterCount: roster.length }
-      })
-    )
+    const allEPs = await ctx.db.query('eventParticipants').collect()
+    return events.map((e) => {
+      const rosterCount = allEPs.filter(ep => ep.event_id === e._id).length
+      return { ...e, rosterCount }
+    })
   },
 })
 
@@ -43,10 +39,8 @@ export const getById = query({
     const event = await ctx.db.get(args.id)
     if (!event) return null
 
-    const rosterRows = await ctx.db
-      .query('eventParticipants')
-      .withIndex('by_event', (q) => q.eq('event_id', args.id))
-      .collect()
+    const allEPs = await ctx.db.query('eventParticipants').collect()
+    const rosterRows = allEPs.filter(ep => ep.event_id === (args.id as string))
 
     const rosterWithParticipants = await Promise.all(
       rosterRows.map(async (row) => {
@@ -73,15 +67,11 @@ export const getById = query({
       }
     }
 
-    const expenses = await ctx.db
-      .query('eventExpenses')
-      .withIndex('by_event', (q) => q.eq('event_id', args.id))
-      .collect()
+    const allExpenses = await ctx.db.query('eventExpenses').collect()
+    const expenses = allExpenses.filter(e => e.event_id === (args.id as string))
 
-    const incomes = await ctx.db
-      .query('eventIncomes')
-      .withIndex('by_event', (q) => q.eq('event_id', args.id))
-      .collect()
+    const allIncomes = await ctx.db.query('eventIncomes').collect()
+    const incomes = allIncomes.filter(i => i.event_id === (args.id as string))
 
     return { ...event, roster: rosterWithParticipants, availableParticipants, expenses, incomes }
   },
