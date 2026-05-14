@@ -1,4 +1,5 @@
 import { mutation, query } from "./_generated/server";
+import { v } from "convex/values";
 
 /**
  * Clears all participant-related imported data.
@@ -35,5 +36,25 @@ export const listEvents = query({
   args: {},
   handler: async (ctx) => {
     return ctx.db.query("events").collect();
+  },
+});
+
+/** No-auth event creation — for use in seed scripts only */
+export const createEvent = mutation({
+  args: {
+    title: v.string(),
+    event_date: v.optional(v.number()),
+    location: v.optional(v.string()),
+    status: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const now = Date.now();
+    return ctx.db.insert("events", {
+      title: args.title,
+      event_date: args.event_date,
+      location: args.location,
+      status: (args.status as any) || "completed",
+      updatedAt: now,
+    });
   },
 });
