@@ -28,6 +28,32 @@
 
 ---
 
+## Session 16 — 2026-05-13
+**Agent:** Antigravity
+**Phase:** Production Data Migration & Bug Fixes
+**Status:** ✅ Complete
+
+### What Was Done
+- **1st Event Data Import**: Created a custom seed script (`scripts/seed-first-event.mjs`) tailored to the structure of the "personal - meet-cute question log" CSV. Successfully imported 38 Night 1 participants to production, mapping multi-line contact cells, contribution amounts, priority weights, and dynamic Q&A fields.
+- **Production Event Creation**: Added a `clearData:createEvent` mutation (no-auth, seed-script only) to create events programmatically. Created "Group date 1" in production as the anchor for Night 1 participants.
+- **Roster Count Fix**: Diagnosed and fixed a critical UI bug where both events displayed "0" for Roster Size. Root cause: data inserted via string-cast IDs (`as any`) was not found by Convex's typed `withIndex('by_event', ...)` query. Fixed `events:list` and `events:getById` to use direct `.filter()` scans instead, which work regardless of ID casting.
+- **Event Detail Fixes**: Applied the same filter-scan fix to `eventExpenses` and `eventIncomes` lookups on the event detail page so expenses and income will display correctly.
+- **clearData Helpers**: Added `listAllEventParticipants` and `assignParticipantToEvent` to `clearData.ts` for use by migration and repair scripts.
+- **Participant Delete Bug Fix**: Replaced Next.js `notFound()` with a graceful "Participant Not Found" UI fallback and redirect link to prevent the router from crashing on delete.
+
+### Decisions Made
+- Used `.filter()` full-table scans in Convex queries instead of `withIndex` for production data inserted via string-cast IDs. Safe tradeoff at current data scale (~100 records).
+- Kept production event names as created on the live site ("Group date 1", "Group date vol 2") rather than renaming them programmatically.
+
+### Open Questions / Blockers
+- The last 8 rows in the Night 1 CSV (Karl, Jalal, Jean Constant, Paul Lecurieux, Nick, Luca, Guillaume, Julie Racine) were from an "excluded / didn't attend" section but were still imported. Organizer should review and remove any that shouldn't be in the database.
+
+### Next Steps
+- Log matches and connections from Night 1 using the Matches tracker.
+- Optionally clean up the 8 potentially excluded Night 1 participants.
+
+---
+
 ## Session 15 — 2026-05-11
 **Agent:** Antigravity
 **Phase:** UX Polish & Dashboard Redesign
